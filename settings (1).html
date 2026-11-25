@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+{% block title %}设置 — Ox{% endblock %}
+
+{% block head_extra %}
+<style>
+.pg{padding:1.5rem 2.5rem;max-width:860px;position:relative;z-index:1}
+.pg-head{margin-bottom:1.5rem}
+.pg-head h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em}
+.pg-head p{font-size:.78rem;color:var(--text-dim);margin-top:.15rem}
+
+/* Section card */
+.s-card{background:rgba(17,17,19,.45);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:1.25rem 1.3rem;margin-bottom:1rem;transition:.2s}
+.s-card:hover{border-color:rgba(255,255,255,.1)}
+.s-hd{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid rgba(255,255,255,.05)}
+.s-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.s-ico svg{width:16px;height:16px;stroke-width:1.5;fill:none}
+.s-ico.violet{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.1)}
+.s-ico.violet svg{stroke:var(--violet)}
+.s-ico.orange{background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.1)}
+.s-ico.orange svg{stroke:var(--orange)}
+.s-ico.cyan{background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.1)}
+.s-ico.cyan svg{stroke:var(--cyan)}
+.s-ico.green{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.1)}
+.s-ico.green svg{stroke:var(--green)}
+.s-hd-text h2{font-size:.9rem;font-weight:700}
+.s-hd-text p{font-size:.68rem;color:var(--text-dim);margin-top:.1rem}
+
+/* Grid rows */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+
+/* Hint text */
+.hint{font-size:.62rem;color:var(--text-muted);margin-top:.25rem}
+.hint a{color:var(--violet-light);text-decoration:underline;text-underline-offset:2px}
+
+/* Info box */
+.info-box{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.1);border-radius:10px;
+  padding:.7rem .9rem;font-size:.7rem;color:#67e8f9;line-height:1.7;margin-bottom:.75rem}
+.info-box strong{color:#a5f3fc}
+
+/* Test button */
+.btn-test{display:inline-flex;align-items:center;gap:.3rem;padding:.4rem .85rem;border-radius:8px;
+  font-size:.72rem;font-weight:500;border:1px solid rgba(139,92,246,.15);background:transparent;
+  color:var(--violet-light);cursor:pointer;transition:.2s;font-family:inherit}
+.btn-test:hover{background:rgba(139,92,246,.08);border-color:var(--violet)}
+.btn-test:disabled{opacity:.4;cursor:not-allowed}
+.test-res{font-size:.72rem;margin-left:.5rem}
+
+/* Checkbox grid */
+.cb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.3rem}
+.cb-grid label{display:flex;align-items:center;gap:.35rem;font-size:.75rem;color:var(--text-dim);
+  padding:.3rem .5rem;border-radius:6px;cursor:pointer;transition:.15s;border:1px solid transparent}
+.cb-grid label:hover{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.05)}
+.cb-grid input[type=checkbox]{accent-color:var(--violet);width:14px;height:14px}
+
+/* Range */
+.range-row{display:flex;align-items:center;gap:.5rem}
+.range-row input[type=range]{flex:1;accent-color:var(--violet);height:4px}
+.range-val{font-family:'JetBrains Mono',monospace;font-size:.75rem;min-width:2.5rem;text-align:center;
+  padding:.15rem .4rem;border-radius:6px;background:rgba(139,92,246,.1);color:var(--violet-light)}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;gap:.6rem;margin-top:.3rem}
+.tog{position:relative;width:38px;height:20px;cursor:pointer}
+.tog input{display:none}
+.tog-track{width:100%;height:100%;border-radius:99px;background:var(--border);transition:.2s}
+.tog input:checked+.tog-track{background:var(--violet)}
+.tog-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.tog input:checked~.tog-thumb{left:20px}
+.tog-lbl{font-size:.78rem}
+.tog-hint{font-size:.62rem;color:var(--text-muted);margin-top:.2rem}
+
+/* Password eye toggle */
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{flex:1;padding-right:2.2rem}
+.pw-eye{position:absolute;right:.5rem;background:none;border:none;cursor:pointer;color:var(--text-dim);
+  padding:2px;display:flex;align-items:center;transition:.15s}
+.pw-eye:hover{color:var(--text)}
+
+/* Save bar */
+.save-bar{position:sticky;bottom:0;padding:1rem 0;z-index:10;
+  background:linear-gradient(transparent,var(--bg) 30%)}
+
+@media(max-width:768px){
+  .pg{padding:1rem}
+  .row2,.row3{grid-template-columns:1fr}
+  .cb-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pg">
+  <div class="pg-head">
+    <h1>设置</h1>
+    <p>配置一次，Ox 引擎自动运转</p>
+  </div>
+
+  {% if saved %}
+  <div class="alert alert-success">设置已保存</div>
+  {% endif %}
+  {% if request.args.get('smtp_err') %}
+  <div class="alert alert-error" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:10px;padding:.7rem .9rem;font-size:.72rem;margin-bottom:.75rem">
+    ⚠️ {{ request.args.get('smtp_err') }}
+  </div>
+  {% endif %}
+
+  <form method="POST" action="/settings">
+
+    <!-- ====== SMTP ====== -->
+    <div class="s-card">
+      <div class="s-hd">
+        <div class="s-ico violet">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg>
+        </div>
+        <div class="s-hd-text">
+          <h2>邮件发送 · SMTP</h2>
+          <p>自动发送开发信的邮箱配置</p>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>发件邮箱</label>
+          <input type="email" name="sender_email" value="{{ email }}" readonly style="opacity:.6;cursor:not-allowed">
+          <div class="hint">由账号绑定，如需更改请联系管理员</div>
+        </div>
+        <div class="field">
+          <label>邮箱服务商 <span style="color:var(--red)">*</span></label>
+          <select name="smtp_provider" id="smtp-provider">
+            <option value="aliyun"  {{ 'selected' if cfg.get('smtp_provider','aliyun')=='aliyun' }}>阿里企业邮</option>
+            <option value="tencent" {{ 'selected' if cfg.get('smtp_provider','')=='tencent' }}>腾讯企业邮</option>
+            <option value="gmail"   {{ 'selected' if cfg.get('smtp_provider','')=='gmail' }}>Gmail</option>
+            <option value="outlook" {{ 'selected' if cfg.get('smtp_provider','')=='outlook' }}>Outlook / Office365</option>
+            <option value="163"     {{ 'selected' if cfg.get('smtp_provider','')=='163' }}>网易163</option>
+            <option value="qq"      {{ 'selected' if cfg.get('smtp_provider','')=='qq' }}>QQ邮箱</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>SMTP 密码 / 客户端专用密码</label>
+          <div class="pw-wrap">
+            <input type="password" name="smtp_pass" id="smtp-pass-input" value="{{ smtp_pass_val }}" placeholder="留空保持当前密码" autocomplete="new-password">
+            <button type="button" class="pw-eye" onclick="togglePw('smtp-pass-input',this)" title="显示/隐藏密码">
+              <svg class="eye-open" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-shut" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:.15rem"><!-- spacer --></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>发件人姓名 <span style="color:var(--red)">*</span></label>
+          <input type="text" name="sender_name" value="{{ cfg.get('sender_name', name) }}" placeholder="如 陈阿尔巴">
+          <div class="hint">邮件落款署名</div>
+        </div>
+        <div class="field">
+          <label>职位 / 公司</label>
+          <input type="text" name="sender_title" value="{{ cfg.get('sender_title', 'International Sales | Kingphar Medical') }}" placeholder="如 海外销售 | Kingphar Medical">
+          <div class="hint">邮件落款第二行</div>
+        </div>
+      </div>
+      <div class="info-box" id="smtp-hint-box">
+        选择服务商后会显示对应的密码获取方式
+      </div>
+      <button type="button" class="btn-test" onclick="testSmtp()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        测试连接
+      </button>
+      <span class="test-res" id="smtp-res"></span>
+    </div>
+
+    <!-- ====== API Keys ====== -->
+    <div class="s-card">
+      <div class="s-hd">
+        <div class="s-ico orange">
+          <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        </div>
+        <div class="s-hd-text">
+          <h2>API 密钥</h2>
+          <p>AI 分析和联系人查找所需的服务密钥</p>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Anthropic API Key <span style="color:var(--red)">*</span></label>
+          <input type="password" name="anthropic_key" placeholder="{{ '●●●● 已配置' if has_anthropic else 'sk-ant-...' }}" autocomplete="off">
+          <div class="hint"><a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a></div>
+        </div>
+        <div class="field">
+          <label>Apollo.io API Key</label>
+          <input type="password" name="apollo_key" placeholder="{{ '●●●● 已配置' if has_apollo else '获取手机号+LinkedIn' }}" autocomplete="off">
+          <div class="hint"><a href="https://developer.apollo.io/" target="_blank">developer.apollo.io</a></div>
+        </div>
+      </div>
+      <div class="field" style="max-width:calc(50% - .375rem)">
+        <label>Hunter.io API Key</label>
+        <input type="password" name="hunter_key" placeholder="{{ '●●●● 已配置' if has_hunter else '邮箱验证服务' }}" autocomplete="off">
+        <div class="hint"><a href="https://hunter.io/api-keys" target="_blank">hunter.io</a> · 免费 25 次/月</div>
+      </div>
+    </div>
+
+    <!-- ====== Company Profile ====== -->
+    <div class="s-card">
+      <div class="s-hd">
+        <div class="s-ico cyan">
+          <svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M10 11h2M10 15h2M14 11h2M14 15h2M18 11h2M18 15h2M5 7l7-4 7 4"/></svg>
+        </div>
+        <div class="s-hd-text">
+          <h2>公司档案</h2>
+          <p>AI 分析和开发信都会引用这些信息</p>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>公司名称 <span style="color:var(--red)">*</span></label>
+          <input type="text" name="company_name" value="{{ cfg.get('company_name','Kingphar Medical') }}">
+        </div>
+        <div class="field">
+          <label>行业 / 产品类别</label>
+          <input type="text" name="company_industry" value="{{ cfg.get('company_industry','Medical disposables manufacturer') }}">
+        </div>
+      </div>
+      <div class="field">
+        <label>核心优势 <span style="color:var(--red)">*</span></label>
+        <textarea name="company_advantages" rows="3">{{ cfg.get('company_advantages','FDA registered since 1998, CE MDR compliant, ISO 13485, zero supply disruption during COVID-19, top-10 Chinese medical disposables exporter, OEM/private label available') }}</textarea>
+        <div class="hint">会出现在每封开发信中 — 写具体的差异化优势</div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>目标客户类型</label>
+          <input type="text" name="company_target_customer" value="{{ cfg.get('company_target_customer','Medical distributors, hospital procurement, healthcare GPOs') }}">
+        </div>
+        <div class="field">
+          <label>行动号召 (CTA)</label>
+          <input type="text" name="company_cta" value="{{ cfg.get('company_cta','15-minute call or product catalog + samples') }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== Target ====== -->
+    <div class="s-card">
+      <div class="s-hd">
+        <div class="s-ico green">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        </div>
+        <div class="s-hd-text">
+          <h2>开发目标</h2>
+          <p>卖什么产品、开发哪些市场</p>
+        </div>
+      </div>
+      <div class="field">
+        <label>产品 / 服务</label>
+        <textarea name="product" rows="2" placeholder="如：医用纱布、绷带、伤口护理一次性耗材 — FDA 注册、CE MDR、ISO 13485">{{ cfg.get('product','') }}</textarea>
+        <div class="hint">直接用于 AI 分析和开发信</div>
+      </div>
+      <div class="field">
+        <label>目标国家</label>
+        <div class="cb-grid">
+          {% for country in country_options %}
+          <label>
+            <input type="checkbox" name="countries" value="{{ country }}" {{ 'checked' if country in cfg.get('countries',[]) }}>
+            {{ country }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="row3" style="margin-top:.75rem">
+        <div class="field">
+          <label>每批公司数</label>
+          <div class="range-row">
+            <input type="range" name="n_targets" min="3" max="12" value="{{ cfg.get('n_targets',5) }}" id="n-slider" oninput="document.getElementById('n-val').textContent=this.value">
+            <span class="range-val" id="n-val">{{ cfg.get('n_targets',5) }}</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>批次间隔</label>
+          <div class="range-row">
+            <input type="range" name="interval_hours" min="1" max="24" value="{{ cfg.get('batch_interval_minutes',120)//60 }}" id="int-slider" oninput="document.getElementById('int-val').textContent=this.value+'h'">
+            <span class="range-val" id="int-val">{{ cfg.get('batch_interval_minutes',120)//60 }}h</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>运行模式</label>
+          <div class="toggle-row">
+            <label class="tog">
+              <input type="checkbox" name="dry_run" value="1" id="dry-tog" {{ 'checked' if cfg.get('dry_run',True) }}>
+              <div class="tog-track"></div>
+              <div class="tog-thumb"></div>
+            </label>
+            <span class="tog-lbl" id="dry-lbl">{{ '预览模式' if cfg.get('dry_run',True) else '正式发信' }}</span>
+          </div>
+          <div class="tog-hint" id="dry-hint">{{ '只找联系人，不发邮件' if cfg.get('dry_run',True) else '将向目标发送真实邮件' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== IMAP ====== -->
+    <div class="s-card">
+      <div class="s-hd">
+        <div class="s-ico violet">
+          <svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        </div>
+        <div class="s-hd-text">
+          <h2>收件检测 · IMAP <span style="font-size:.65rem;color:var(--text-muted);font-weight:400">可选</span></h2>
+          <p>自动检测客户是否回复了你的开发信</p>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>邮箱服务商</label>
+          <select name="imap_provider" id="imap-provider">
+            {% for key, preset in imap_presets.items() if key != 'custom' %}
+            <option value="{{ key }}" {{ 'selected' if imap_cfg.get('provider','')==key }}>{{ preset.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>IMAP 邮箱地址</label>
+          <input type="email" name="imap_user" value="{{ imap_cfg.get('username', email) }}" placeholder="your@email.com">
+        </div>
+      </div>
+      <div class="field" style="max-width:calc(50% - .375rem)">
+        <label>密码 / 客户端专用密码</label>
+        <div class="pw-wrap">
+          <input type="password" name="imap_pass" id="imap-pass-input" value="{{ imap_cfg.get('password','') }}" placeholder="留空保持当前密码">
+          <button type="button" class="pw-eye" onclick="togglePw('imap-pass-input',this)" title="显示/隐藏密码">
+            <svg class="eye-open" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-shut" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <div class="hint" id="imap-hint">与 SMTP 密码相同，Gmail 需使用应用密码</div>
+      </div>
+      <button type="button" class="btn-test" onclick="testImap()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        测试 IMAP
+      </button>
+      <span class="test-res" id="imap-res"></span>
+    </div>
+
+    <!-- ====== Save ====== -->
+    <div class="save-bar">
+      <button type="submit" class="btn-primary" style="min-width:160px">保存设置</button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── 密码显隐 ── */
+function togglePw(inputId,btn){
+  const inp=document.getElementById(inputId);
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  btn.querySelector('.eye-open').style.display=show?'none':'';
+  btn.querySelector('.eye-shut').style.display=show?'':'none';
+}
+
+/* ── Dry-run toggle ── */
+document.getElementById('dry-tog').addEventListener('change',function(){
+  document.getElementById('dry-lbl').textContent=this.checked?'预览模式':'正式发信';
+  document.getElementById('dry-hint').textContent=this.checked?'只找联系人，不发邮件':'将向目标发送真实邮件';
+});
+
+/* ── SMTP 服务商提示联动 ── */
+const smtpHints={
+  aliyun:'阿里企业邮 → 设置 → 安全设置 → 开启客户端密码',
+  tencent:'腾讯企业邮 → 设置 → 客户端密码 → 启用 SMTP',
+  gmail:'Gmail → <a href="https://myaccount.google.com/apppasswords" target="_blank">生成应用密码</a>',
+  outlook:'账号 → 安全 → 应用密码',
+  '163':'网易163 → 设置 → POP3/SMTP → 生成授权码',
+  qq:'QQ邮箱 → 设置 → 账户 → 开启SMTP → 获取授权码',
+};
+
+/* ── IMAP 服务商提示联动 ── */
+const imapHints={
+  aliyun:'阿里企业邮 → 设置 → 启用 IMAP',
+  gmail:'Gmail 需要<a href="https://myaccount.google.com/apppasswords" target="_blank">应用密码</a>',
+  tencent:'腾讯企业邮 → 设置 → 客户端密码',
+  outlook:'使用 Outlook 登录密码即可',
+};
+document.getElementById('imap-provider').addEventListener('change',function(){
+  document.getElementById('imap-hint').innerHTML=imapHints[this.value]||'使用邮箱密码';
+});
+
+document.getElementById('smtp-provider').addEventListener('change',function(){
+  document.getElementById('smtp-hint-box').innerHTML=smtpHints[this.value]||'使用邮箱客户端密码';
+});
+// 页面加载时触发一次
+document.getElementById('smtp-provider').dispatchEvent(new Event('change'));
+
+/* ── SMTP 联动：选择服务商后，IMAP自动跟随（如果IMAP未单独改过）── */
+let imapManuallyChanged=false;
+document.getElementById('imap-provider').addEventListener('change',function(){ imapManuallyChanged=true; });
+document.getElementById('smtp-provider').addEventListener('change',function(){
+  if(!imapManuallyChanged){
+    const map={aliyun:'aliyun',tencent:'tencent',gmail:'gmail',outlook:'outlook','163':'163',qq:'qq'};
+    const sel=document.getElementById('imap-provider');
+    if(map[this.value] && sel.querySelector('option[value="'+map[this.value]+'"]')){
+      sel.value=map[this.value];
+      sel.dispatchEvent(new Event('change'));
+    }
+  }
+});
+
+/* ── 测试 SMTP（带 provider）── */
+async function testSmtp(){
+  const btn=event.target.closest('.btn-test'),res=document.getElementById('smtp-res');
+  btn.disabled=true;res.textContent='测试中…';res.style.color='var(--text-dim)';
+  try{
+    const r=await fetch('/settings/test-smtp',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        email:document.querySelector('[name=sender_email]').value,
+        password:document.querySelector('[name=smtp_pass]').value,
+        provider:document.getElementById('smtp-provider').value
+      })});
+    const d=await r.json();
+    res.textContent=d.msg;res.style.color=d.ok?'var(--green)':'var(--red)';
+  }catch(e){res.textContent='错误：'+e;res.style.color='var(--red)'}
+  btn.disabled=false;
+}
+
+/* ── 测试 IMAP（密码为空时回填SMTP密码）── */
+async function testImap(){
+  const btn=event.target.closest('.btn-test'),res=document.getElementById('imap-res');
+  btn.disabled=true;res.textContent='测试中…';res.style.color='var(--text-dim)';
+  let imapPw=document.querySelector('[name=imap_pass]').value;
+  if(!imapPw) imapPw=document.querySelector('[name=smtp_pass]').value; // 回填
+  try{
+    const r=await fetch('/settings/test-imap',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({provider:document.getElementById('imap-provider').value,
+        username:document.querySelector('[name=imap_user]').value,
+        password:imapPw})});
+    const d=await r.json();
+    res.textContent=d.msg;res.style.color=d.ok?'var(--green)':'var(--red)';
+  }catch(e){res.textContent='错误：'+e;res.style.color='var(--red)'}
+  btn.disabled=false;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+{% block title %}管理 — Ox{% endblock %}
+
+{% block head_extra %}
+<style>
+/* ── Admin v5 — Gmail-style ── */
+.adm{max-width:1060px;margin:0 auto;padding:24px 28px 60px}
+.adm-head{margin-bottom:20px}
+.adm-head h1{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.adm-head p{font-size:13px;color:var(--text-sec);margin-top:2px}
+
+/* Tabs — pill bar */
+.tabs{
+  display:inline-flex;gap:4px;padding:4px;
+  background:var(--surface-2);border:1px solid var(--border-light);
+  border-radius:12px;margin-bottom:24px;
+}
+.tab-btn{
+  padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;border:none;
+  background:transparent;color:var(--text-sec);cursor:pointer;transition:all .2s;font-family:inherit;
+}
+.tab-btn:hover{color:var(--text);background:var(--white)}
+.tab-btn.active{background:var(--white);color:var(--brand);font-weight:700;
+  box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* Section card */
+.a-card{
+  border-radius:14px;border:1px solid var(--border-light);
+  background:var(--white);overflow:hidden;margin-bottom:16px;
+  transition:box-shadow .3s;
+}
+.a-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.a-card-head{
+  display:flex;align-items:center;gap:12px;
+  padding:18px 24px;border-bottom:1px solid var(--border-light);
+}
+.a-ico{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.a-ico svg{width:18px;height:18px;stroke-width:1.5;fill:none}
+.a-ico.violet{background:#f3e5f5;border:1px solid #e1bee7}.a-ico.violet svg{stroke:#7b1fa2}
+.a-ico.orange{background:#fff3e0;border:1px solid #ffe0b2}.a-ico.orange svg{stroke:#e65100}
+.a-ico.green{background:#e8f5e9;border:1px solid #c8e6c9}.a-ico.green svg{stroke:#2e7d32}
+.a-ico.cyan{background:#e0f7fa;border:1px solid #b2ebf2}.a-ico.cyan svg{stroke:#00838f}
+.a-card-head h2{font-size:15px;font-weight:700}
+.a-card-head p{font-size:12px;color:var(--text-ter);margin-top:1px}
+.a-card-body{padding:16px 24px}
+
+/* User row */
+.u-row{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  border-radius:10px;margin-bottom:6px;
+  border:1px solid var(--border-light);background:var(--white);
+  transition:all .2s;
+}
+.u-row:hover{border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.u-av{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,#ea580c,#fb923c);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.u-info{flex:1;min-width:0}
+.u-name{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.u-meta{font-size:12px;color:var(--text-ter);margin-top:2px;display:flex;align-items:center;gap:6px}
+
+/* Plan badge */
+.p-badge{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+.p-trial{background:var(--surface-2);color:var(--text-ter)}
+.p-basic{background:#f3e5f5;color:#7b1fa2}
+.p-standard{background:#fff3e0;color:#e65100}
+.p-pro{background:#e8f5e9;color:#2e7d32}
+.pill-admin{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--brand-light);color:var(--brand);font-weight:700}
+
+/* SMTP dot */
+.smtp-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.smtp-dot.ok{background:var(--green)}.smtp-dot.no{background:var(--text-ter)}
+
+/* Small select */
+.sel-sm{
+  padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;
+  background:var(--white);color:var(--text);font-family:inherit;outline:none;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%235f6368' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;
+  transition:.2s;
+}
+.sel-sm:focus{border-color:var(--blue)}
+
+/* Remove button */
+.btn-rm{
+  padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;
+  border:1px solid #ffcdd2;background:var(--white);color:var(--red);
+  cursor:pointer;font-family:inherit;transition:.2s;
+}
+.btn-rm:hover{background:#ffebee;border-color:var(--red)}
+
+/* Summary stats */
+.sum-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.sum-c{
+  padding:18px 14px;border-radius:14px;background:var(--white);
+  border:1px solid var(--border-light);text-align:center;
+  transition:all .3s;cursor:default;
+}
+.sum-c:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.sum-v{font-size:26px;font-weight:800;letter-spacing:-1px}
+.sum-l{font-size:11px;color:var(--text-sec);margin-top:3px;font-weight:500}
+
+/* Month selector */
+.mo-sel{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.mo-sel span{font-size:13px;color:var(--text-sec)}
+
+/* Table */
+.u-table{width:100%;border-collapse:collapse;font-size:13px}
+.u-table th{
+  font-size:11px;color:var(--text-ter);font-weight:600;
+  padding:10px 16px;border-bottom:1px solid var(--border-light);text-align:left;
+}
+.u-table td{padding:12px 16px;border-bottom:1px solid var(--border-light);color:var(--text)}
+.u-table tr:last-child td{border-bottom:none}
+.u-table tr:hover td{background:var(--surface-2)}
+
+/* Usage bar */
+.ub-wrap{display:flex;align-items:center;gap:8px}
+.ub-bg{flex:1;background:var(--border-light);border-radius:99px;height:6px;overflow:hidden;max-width:100px}
+.ub-fill{height:100%;border-radius:99px;transition:width .4s}
+.ub-fill.ok{background:var(--green)}.ub-fill.warn{background:var(--amber)}.ub-fill.over{background:var(--red)}
+
+/* Bill card */
+.bill-c{
+  background:var(--white);border:1px solid var(--border-light);border-radius:12px;
+  padding:16px 20px;margin-bottom:10px;transition:all .2s;
+}
+.bill-c:hover{border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.bill-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.bill-amt{font-size:22px;font-weight:800}
+.bill-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bill-item{background:var(--surface-2);border-radius:8px;padding:8px 12px}
+.bill-item-lbl{font-size:11px;color:var(--text-ter);margin-bottom:2px}
+.bill-item-val{font-weight:600;font-size:14px}
+
+/* Form rows */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* Empty */
+.empty{text-align:center;padding:32px 16px;color:var(--text-ter);font-size:13px}
+
+@media(max-width:768px){
+  .adm{padding:16px}
+  .sum-row{grid-template-columns:repeat(2,1fr)}
+  .bill-grid{grid-template-columns:1fr}
+  .u-row{flex-wrap:wrap}
+  .u-row .u-acts{width:100%;justify-content:flex-end;margin-top:6px}
+  .tabs{overflow-x:auto;width:100%}
+  .u-table th,.u-table td{padding:8px}
+  .u-table{font-size:12px}
+  .row2{grid-template-columns:1fr}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="adm">
+  <div class="adm-head">
+    <h1>管理后台</h1>
+    <p>用户管理 · 使用量监控 · 账单 · 余额</p>
+  </div>
+
+  {% if msg %}
+  <div class="alert {{ 'alert-success' if '✅' in msg or 'success' in msg.lower() else 'alert-error' }}">{{ msg }}</div>
+  {% endif %}
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('users',this)">👥 用户</button>
+    <button class="tab-btn" onclick="switchTab('usage',this)">📊 使用量</button>
+    <button class="tab-btn" onclick="switchTab('billing',this)">💰 账单</button>
+    <button class="tab-btn" onclick="switchTab('register',this)">➕ 注册用户</button>
+    <button class="tab-btn" onclick="switchTab('balance',this)">💳 余额</button>
+  </div>
+
+  <!-- ══════ Users ══════ -->
+  <div class="tab-panel active" id="tab-users">
+    <div class="a-card">
+      <div class="a-card-head">
+        <div class="a-ico violet"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div><h2>活跃用户</h2><p>{{ users|length }} 个账号</p></div>
+      </div>
+      <div class="a-card-body">
+        {% for u in users %}
+        <div class="u-row">
+          <div class="u-av">{{ (u.name or u.username)[:1]|upper }}</div>
+          <div class="u-info">
+            <div class="u-name">
+              {{ u.name }}
+              <span style="font-weight:400;color:var(--text-ter);font-size:12px">@{{ u.username }}</span>
+              <span class="p-badge p-{{ u.get('plan','trial') }}">{{ u.get('plan','trial') }}</span>
+              {% if u.role == 'admin' %}<span class="pill-admin">管理员</span>{% endif %}
+            </div>
+            <div class="u-meta">
+              {{ u.email }}
+              <span class="smtp-dot {{ 'ok' if u.has_smtp else 'no' }}"></span>
+              {{ 'SMTP 已连' if u.has_smtp else '未配置' }}
+            </div>
+          </div>
+          <div class="u-acts" style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <form method="POST" action="/admin/set-plan" style="display:flex;align-items:center">
+              <input type="hidden" name="username" value="{{ u.username }}">
+              <select name="plan" class="sel-sm" onchange="this.form.submit()">
+                {% for pk, pv in plans.items() %}
+                <option value="{{ pk }}" {{ 'selected' if u.get('plan','trial')==pk }}>{{ pv.name }}</option>
+                {% endfor %}
+              </select>
+            </form>
+            {% if u.role != 'admin' %}
+            <form method="POST" action="/admin/delete/{{ u.username }}" onsubmit="return confirm('确认移除 {{ u.name }}？')">
+              <button type="submit" class="btn-rm">移除</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ Usage ══════ -->
+  <div class="tab-panel" id="tab-usage">
+    <div class="mo-sel">
+      <span>月份：</span>
+      <select class="sel-sm" onchange="location='?month='+this.value+'#usage'">
+        {% for m in available_months %}
+        <option value="{{ m }}" {{ 'selected' if m == selected_month }}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="sum-row">
+      <div class="sum-c"><div class="sum-v" style="color:#7c3aed">{{ usage_summary.total_companies }}</div><div class="sum-l">分析公司</div></div>
+      <div class="sum-c"><div class="sum-v" style="color:#16a34a">{{ usage_summary.total_contacts }}</div><div class="sum-l">找到联系人</div></div>
+      <div class="sum-c"><div class="sum-v" style="color:#0891b2">{{ usage_summary.total_emails }}</div><div class="sum-l">已发邮件</div></div>
+      <div class="sum-c"><div class="sum-v" style="color:#ea580c">¥{{ usage_summary.total_revenue }}</div><div class="sum-l">预估收入</div></div>
+    </div>
+
+    <div class="a-card" style="padding:0">
+      <table class="u-table">
+        <thead>
+          <tr>
+            <th>用户</th>
+            <th>套餐</th>
+            <th>分析公司数</th>
+            <th>已验证联系人</th>
+            <th>WhatsApp</th>
+            <th>已发邮件</th>
+            <th>预估费用</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in usage_rows %}
+          {% set pct = (row.used / row.quota * 100) if row.quota else 0 %}
+          {% set bar_cls = 'over' if pct > 100 else ('warn' if pct > 75 else 'ok') %}
+          <tr>
+            <td>
+              <div style="font-weight:600">{{ row.name }}</div>
+              <div style="font-size:11px;color:var(--text-ter)">@{{ row.username }}</div>
+            </td>
+            <td><span class="p-badge p-{{ row.plan_key }}">{{ row.plan }}</span></td>
+            <td>
+              <div class="ub-wrap">
+                <span style="font-weight:600;min-width:24px">{{ row.used }}</span>
+                <div class="ub-bg"><div class="ub-fill {{ bar_cls }}" style="width:{{ [pct,100]|min }}%"></div></div>
+                <span style="font-size:11px;color:var(--text-ter)">/{{ row.quota }}</span>
+              </div>
+            </td>
+            <td>
+              <span style="font-weight:700;color:var(--green)">{{ row.verified }}</span>
+              <span style="font-size:11px;color:var(--text-ter);margin-left:3px">/ {{ row.usage.get('contact_found',0) }}</span>
+            </td>
+            <td>{{ row.usage.get('whatsapp_found',0) }}</td>
+            <td>{{ row.usage.get('email_sent',0) }}</td>
+            <td>
+              <span style="font-weight:700;color:var(--brand)">¥{{ row.total }}</span>
+              <div style="font-size:11px;color:var(--text-ter)">{{ row.verified }} × ¥0.5</div>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not usage_rows %}
+          <tr><td colspan="7" class="empty">本月暂无使用记录</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════ Billing ══════ -->
+  <div class="tab-panel" id="tab-billing">
+    <div class="mo-sel">
+      <span>月份：</span>
+      <select class="sel-sm" onchange="location='?month='+this.value+'#billing'">
+        {% for m in available_months %}
+        <option value="{{ m }}" {{ 'selected' if m == selected_month }}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% for row in usage_rows %}
+    <div class="bill-c">
+      <div class="bill-top">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:15px">{{ row.name }}</span>
+          <span style="color:var(--text-ter);font-size:12px">@{{ row.username }}</span>
+          <span class="p-badge p-{{ row.plan_key }}">{{ row.plan }}</span>
+        </div>
+        <div class="bill-amt" style="color:{{ 'var(--brand)' if row.total > 0 else 'var(--text-ter)' }}">¥{{ row.total }}</div>
+      </div>
+      <div class="bill-grid">
+        <div class="bill-item">
+          <div class="bill-item-lbl">套餐费</div>
+          <div class="bill-item-val">¥{{ row.base_fee }}</div>
+        </div>
+        <div class="bill-item">
+          <div class="bill-item-lbl">分析数 / 额度</div>
+          <div class="bill-item-val">{{ row.used }} / {{ row.quota }}</div>
+        </div>
+        <div class="bill-item" {% if row.overage > 0 %}style="background:#ffebee;border:1px solid #ffcdd2"{% endif %}>
+          <div class="bill-item-lbl">超量费</div>
+          <div class="bill-item-val" style="color:{{ 'var(--red)' if row.overage > 0 else 'var(--text)' }}">
+            {% if row.overage > 0 %}¥{{ row.overage_fee }} ({{ row.overage }}家 × ¥{{ row.overage_price }}){% else %}¥0{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% if not usage_rows %}
+    <div class="empty">本月暂无账单</div>
+    {% endif %}
+  </div>
+
+  <!-- ══════ Register ══════ -->
+  <div class="tab-panel" id="tab-register">
+    <div class="a-card">
+      <div class="a-card-head">
+        <div class="a-ico green"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+        <div><h2>注册新用户</h2><p>为团队成员创建账号</p></div>
+      </div>
+      <div class="a-card-body">
+        <form method="POST" action="/admin/add">
+          <div class="row2">
+            <div class="field"><label>用户名</label><input type="text" name="username" required placeholder="英文，如 zhangsan"></div>
+            <div class="field"><label>显示名称</label><input type="text" name="name" required placeholder="如 张三"></div>
+          </div>
+          <div class="field"><label>邮箱</label><input type="email" name="email" required placeholder="user@company.com"></div>
+          <div class="row2">
+            <div class="field"><label>登录密码</label><input type="password" name="password" required></div>
+            <div class="field"><label>SMTP 密码 <span style="font-size:11px;color:var(--text-ter)">可选</span></label><input type="password" name="smtp_pass"></div>
+          </div>
+          <div class="field" style="max-width:360px">
+            <label>套餐</label>
+            <select name="plan" class="sel-sm" style="width:100%;padding:10px 14px;font-size:14px">
+              {% for pk, pv in plans.items() %}
+              <option value="{{ pk }}">{{ pv.name }} — ¥{{ pv.price_monthly }}/月 ({{ pv.quota }}家)</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn-primary" style="margin-top:8px;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;background:var(--brand);color:#fff;transition:.2s;font-family:inherit">创建账号</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ Balance ══════ -->
+  <div class="tab-panel" id="tab-balance">
+    <div class="a-card">
+      <div class="a-card-head">
+        <div class="a-ico orange"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div><h2>手动充值</h2><p>用户微信转账后，在此添加余额</p></div>
+      </div>
+      <div class="a-card-body">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="field" style="margin:0;flex:1;min-width:160px">
+            <label>用户名</label>
+            <select id="topup-user" class="sel-sm" style="width:100%;padding:10px 14px;font-size:14px">
+              {% for u in users %}
+              <option value="{{ u.username }}">{{ u.name }} (@{{ u.username }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field" style="margin:0;width:120px">
+            <label>金额 (¥)</label>
+            <input type="number" id="topup-amount" placeholder="100" min="1" step="1" style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;width:100%;outline:none">
+          </div>
+          <div class="field" style="margin:0;flex:1;min-width:160px">
+            <label>备注</label>
+            <input type="text" id="topup-note" placeholder="微信转账" style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;width:100%;outline:none">
+          </div>
+          <button style="height:42px;padding:0 20px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;background:var(--brand);color:#fff;transition:.2s;font-family:inherit" onclick="doTopup()">充值</button>
+        </div>
+        <div id="topup-msg" style="font-size:13px;margin-top:8px;display:none"></div>
+      </div>
+    </div>
+
+    <div class="a-card" style="padding:0">
+      <div class="a-card-head">
+        <div class="a-ico cyan"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div><h2>用户余额</h2><p>所有用户当前余额与累计消费</p></div>
+      </div>
+      <table class="u-table">
+        <thead><tr><th>用户</th><th>当前余额</th><th>累计充值</th><th>累计消费</th></tr></thead>
+        <tbody id="balance-tbody"><tr><td colspan="4" class="empty">加载中…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function doTopup(){
+  const user=document.getElementById('topup-user').value;
+  const amount=parseFloat(document.getElementById('topup-amount').value);
+  const note=document.getElementById('topup-note').value.trim();
+  const msg=document.getElementById('topup-msg');
+  if(!user||!amount||amount<=0){msg.textContent='请选择用户并填写金额';msg.style.color='var(--red)';msg.style.display='block';return}
+  const r=await fetch('/admin/topup',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({username:user,amount:amount,note:note})});
+  const d=await r.json();
+  if(d.ok){
+    msg.textContent='✓ 已为 '+user+' 充值 ¥'+amount+'，当前余额 ¥'+d.balance.toFixed(1);
+    msg.style.color='var(--green)';msg.style.display='block';
+    document.getElementById('topup-amount').value='';
+    loadBalances();
+  }else{
+    msg.textContent='✗ '+d.error;msg.style.color='var(--red)';msg.style.display='block';
+  }
+}
+async function loadBalances(){
+  try{
+    const r=await fetch('/admin/balances');const list=await r.json();
+    const tb=document.getElementById('balance-tbody');
+    if(!list.length){tb.innerHTML='<tr><td colspan="4" class="empty">暂无数据</td></tr>';return}
+    tb.innerHTML=list.map(b=>`<tr>
+      <td style="font-weight:600">${b.username}</td>
+      <td style="font-weight:700;color:var(--brand)">¥${b.balance.toFixed(1)}</td>
+      <td style="color:var(--green)">¥${(b.total_topup||0).toFixed(1)}</td>
+      <td style="color:var(--red)">¥${(b.total_spent||0).toFixed(1)}</td>
+    </tr>`).join('');
+  }catch(e){}
+}
+loadBalances();
+
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  location.hash=name;
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  const h=location.hash.replace('#','');
+  if(h){const btn=document.querySelector(`.tab-btn[onclick*="'${h}'"]`);if(btn)switchTab(h,btn)}
+});
+</script>
+{% endblock %}

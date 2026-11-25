@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+{% block title %}联系人 — Ox{% endblock %}
+
+{% block head_extra %}
+<style>
+/* ---- Contacts v5 ---- */
+
+/* Stats */
+.cs{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:20px 24px 0}
+.cs-c{
+  padding:18px 14px;border-radius:14px;
+  background:var(--white);border:1px solid var(--border-light);
+  text-align:center;transition:all .3s;cursor:default;
+  animation:slideUp .5s ease backwards;
+}
+.cs-c:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.06);border-color:var(--border)}
+.cs-c:nth-child(1){animation-delay:0ms}.cs-c:nth-child(2){animation-delay:50ms}.cs-c:nth-child(3){animation-delay:100ms}
+.cs-c:nth-child(4){animation-delay:150ms}.cs-c:nth-child(5){animation-delay:200ms}
+.cs-v{font-size:26px;font-weight:800;letter-spacing:-1px}
+.cs-l{font-size:11px;color:var(--text-sec);margin-top:3px;font-weight:500}
+
+/* Filter toolbar */
+.fbar{
+  display:flex;align-items:center;gap:8px;padding:16px 24px 8px;flex-wrap:wrap;
+}
+.search-wrap{position:relative;flex:1;max-width:280px}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-ter)}
+.search-wrap input{
+  width:100%;padding:9px 14px 9px 38px;
+  background:var(--white);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:.2s;
+}
+.search-wrap input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.12)}
+.search-wrap input::placeholder{color:#9aa0a6}
+
+.f-select{
+  padding:9px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;
+  max-width:200px;transition:.2s;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%235f6368' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
+}
+.f-select:focus{border-color:var(--blue)}
+
+/* Chips row */
+.chip-bar{display:flex;gap:6px;padding:4px 24px 16px;flex-wrap:wrap;align-items:center}
+.fchip{
+  display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;
+  font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--white);
+  color:var(--text-sec);cursor:pointer;transition:all .2s;text-decoration:none;
+}
+.fchip:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-light)}
+.fchip.on-v{background:var(--brand-light);color:var(--brand);border-color:var(--brand-ring);font-weight:600}
+.fchip.on-g{background:var(--green-bg);color:var(--green);border-color:var(--green-border);font-weight:600}
+.fchip.on-b{background:var(--blue-bg);color:var(--blue);border-color:#bbdefb;font-weight:600}
+.fchip.on-o{background:#fff7ed;color:#ea580c;border-color:#fed7aa;font-weight:600}
+.fc-b{font-size:11px;padding:1px 6px;border-radius:8px;background:var(--border-light);color:var(--text-ter);font-weight:600}
+.fchip.on-v .fc-b{background:var(--brand-ring);color:var(--brand)}
+.fchip.on-g .fc-b{background:var(--green-border);color:var(--green)}
+.fchip.on-b .fc-b{background:#bbdefb;color:var(--blue)}
+.fchip.on-o .fc-b{background:#fed7aa;color:#ea580c}
+.chip-sep{width:1px;height:20px;background:var(--border);margin:0 2px}
+
+/* Export button */
+.btn-export{
+  font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);
+  background:var(--white);color:var(--text-sec);cursor:pointer;font-family:inherit;
+  transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-export:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-light)}
+
+/* ---- Company Group (accordion) ---- */
+.cg{
+  background:var(--white);
+  border:1px solid var(--border-light);border-radius:14px;
+  margin:0 24px 10px;overflow:hidden;
+  transition:all .25s;
+}
+.cg:hover{border-color:var(--border);box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.cg-h{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;cursor:pointer;user-select:none;gap:8px}
+.cg-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.cg-ico{
+  width:36px;height:36px;border-radius:10px;background:#f3e5f5;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.cg-ico svg{width:18px;height:18px;stroke:#7c3aed;fill:none;stroke-width:1.5}
+.cg-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg-meta{font-size:12px;color:var(--text-ter);margin-top:1px}
+.cg-pills{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap}
+.pill-sm{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+.pill-g{background:#e8f5e9;color:#2e7d32}
+.pill-b{background:#e3f2fd;color:#1565c0}
+.pill-y{background:#fff3e0;color:#e65100}
+.pill-r{background:#ffebee;color:#c62828}
+.pill-d{background:var(--surface-2);color:var(--text-ter)}
+.pill-sent{background:#e3f2fd;color:#1565c0}
+.cg-arr{font-size:11px;color:var(--text-ter);transition:transform .25s;flex-shrink:0}
+.cg.open .cg-arr{transform:rotate(90deg)}
+.cg-body{display:none;border-top:1px solid var(--border-light);padding:16px 18px;background:var(--surface-2)}
+.cg.open .cg-body{display:block}
+
+/* ---- Contact Row ---- */
+.cr{
+  display:flex;align-items:flex-start;gap:12px;padding:12px 14px;
+  background:var(--white);border:1px solid var(--border-light);
+  border-radius:10px;margin-bottom:6px;transition:all .2s;
+}
+.cr:hover{border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.cr-av{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,#ea580c,#fb923c);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.cr-av.dept{background:linear-gradient(135deg,#9ca3af,#6b7280)}
+.cr-info{flex:1;min-width:0}
+.cr-name{font-weight:600;font-size:14px}
+.cr-title{font-size:13px;color:var(--text-sec);margin-top:1px}
+.cr-ch{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.clink{
+  display:inline-flex;align-items:center;gap:4px;font-size:13px;
+  padding:4px 10px;border-radius:6px;text-decoration:none;
+  transition:.15s;border:1px solid transparent;
+}
+.clink.wa{color:#2e7d32;background:#e8f5e9;border-color:#c8e6c9}
+.clink.wa:hover{background:#c8e6c9}
+.clink.email{color:#1565c0;background:#e3f2fd;border-color:#bbdefb}
+.clink.email:hover{background:#bbdefb}
+.clink.li{color:#0e76a8;background:#e3f2fd;border-color:#bbdefb}
+.clink.li:hover{background:#bbdefb}
+
+/* Source & Status tags */
+.src-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.src-tag{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:11px;color:var(--text-ter);background:var(--surface-2);border-radius:4px;
+  padding:2px 8px;text-decoration:none;transition:.15s;border:1px solid transparent;
+  max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+a.src-tag{color:#1565c0;background:#e3f2fd;border-color:#bbdefb;cursor:pointer}
+a.src-tag:hover{border-color:#1565c0;background:#bbdefb}
+.st-ok{color:#2e7d32;background:#e8f5e9;border-color:#c8e6c9}
+.st-fail{color:#c62828;background:#ffebee;border-color:#ffcdd2}
+.st-warn{color:#e65100;background:#fff3e0;border-color:#ffe0b2}
+
+/* ---- Draft Panel ---- */
+.draft{background:#eff6ff;border:1px solid #bbdefb;border-radius:12px;padding:14px 16px;margin-top:12px}
+.draft-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.draft-lbl{font-size:12px;color:#1565c0;letter-spacing:.5px;font-weight:700}
+.draft-acts{display:flex;gap:4px}
+.cp-btn{
+  display:inline-flex;align-items:center;gap:4px;background:var(--brand);color:#fff;border:none;
+  border-radius:6px;font-size:12px;padding:5px 12px;cursor:pointer;font-family:inherit;font-weight:600;transition:.15s;
+}
+.cp-btn:hover{background:#c2410c}.cp-btn.copied{background:var(--green)}
+.draft-subj{font-weight:600;font-size:14px;margin-bottom:6px;padding:8px 12px;
+  background:var(--white);border-radius:8px;border:1px solid #bbdefb}
+.draft-body{
+  font-family:'SF Mono','JetBrains Mono',monospace;font-size:13px;color:var(--text-sec);line-height:1.75;
+  white-space:pre-wrap;background:var(--white);border:1px solid #bbdefb;
+  border-radius:8px;padding:10px 14px;max-height:220px;overflow-y:auto;margin-bottom:8px;
+}
+.wa-draft{background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;
+  padding:8px 12px;margin-top:8px;display:flex;align-items:flex-start;gap:8px}
+.wa-draft-text{flex:1;font-size:13px;color:#2e7d32;line-height:1.65}
+.entry-tag{
+  display:flex;align-items:flex-start;gap:6px;background:#fff3e0;
+  border:1px solid #ffe0b2;border-radius:8px;padding:8px 12px;margin-top:8px;
+  font-size:13px;color:#e65100;line-height:1.6;
+}
+
+/* ---- Intel ---- */
+.intel{margin-top:12px}
+.intel-btn{
+  display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
+  color:#1565c0;cursor:pointer;padding:6px 12px;border-radius:8px;transition:.15s;
+  background:transparent;border:1px solid #bbdefb;
+}
+.intel-btn:hover{background:#e3f2fd}
+.intel-bd{display:none;margin-top:8px;background:var(--white);border:1px solid var(--border-light);
+  border-radius:10px;padding:14px 16px;font-size:14px;color:var(--text-sec);line-height:1.7;
+  max-height:400px;overflow-y:auto}
+.intel-bd.show{display:block}
+
+/* Empty */
+.empty-st{text-align:center;padding:60px 16px;color:var(--text-ter)}
+.empty-st svg{opacity:.25;margin-bottom:10px}
+.empty-st p{font-size:15px;margin-top:8px}
+.empty-st .sub{font-size:13px;color:var(--text-ter)}
+
+/* Head row */
+.pg-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+.pg-head h1{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.pg-head p{font-size:13px;color:var(--text-sec);margin-top:2px}
+
+/* Responsive */
+@media(max-width:768px){
+  .cs{grid-template-columns:repeat(2,1fr);padding:12px}
+  .cs-c:nth-child(5){grid-column:span 2}
+  .cg{margin:0 12px 8px}
+  .fbar,.chip-bar{padding-left:12px;padding-right:12px}
+  .pg-head{padding:12px;flex-direction:column;align-items:flex-start;gap:8px}
+  .search-wrap{max-width:100%}
+  .f-select{max-width:100%}
+}
+
+/* ─── Funnel Pipeline ─── */
+.funnel{display:flex;align-items:stretch;gap:0;padding:0 24px 14px;overflow-x:auto}
+.funnel-stage{flex:1;min-width:0;text-align:center;padding:14px 8px 12px;position:relative;
+  background:var(--white);border:1px solid var(--border-light);cursor:default;transition:.2s}
+.funnel-stage:first-child{border-radius:10px 0 0 10px}
+.funnel-stage:last-child{border-radius:0 10px 10px 0}
+.funnel-stage+.funnel-stage{border-left:none}
+.funnel-stage:hover{background:var(--surface-2,#f8fafc)}
+.funnel-stage .fn-v{font-size:22px;font-weight:800;letter-spacing:-1px;line-height:1}
+.funnel-stage .fn-l{font-size:11px;color:var(--text-sec);margin-top:4px;font-weight:500}
+.funnel-stage .fn-arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;color:var(--text-sec);opacity:.4;z-index:1}
+.funnel-stage.fn-hi{background:#f0fdf4;border-color:#bbf7d0}
+.funnel-rate{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 18px;min-width:70px}
+.funnel-rate .fn-v{font-size:20px;font-weight:800;color:#16a34a}
+.funnel-rate .fn-l{font-size:11px;color:var(--text-sec);margin-top:3px}
+
+/* ─── Batch Bar ─── */
+.batch-bar{display:none;align-items:center;gap:10px;padding:8px 24px;background:#fffbeb;
+  border-bottom:1px solid #fde68a;margin:0 24px 8px;border-radius:8px}
+.batch-bar .bb-n{font-size:13px;color:#92400e;font-weight:600}
+.batch-bar button{font-size:12px;padding:5px 14px;border-radius:6px;cursor:pointer;font-family:inherit;border:none}
+.batch-bar .bb-dismiss{background:#f59e0b;color:#fff}
+.batch-bar .bb-delete{background:#dc2626;color:#fff}
+.batch-bar .bb-cancel{background:transparent;border:1px solid var(--border);color:var(--text-sec)}
+
+/* ─── Select checkbox ─── */
+.sel-cb{display:none;width:16px;height:16px;cursor:pointer;accent-color:#ea580c;flex-shrink:0;margin-right:4px}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Head -->
+<div class="pg-head">
+  <div>
+    <h1>联系人</h1>
+    <p>{{ companies|length }} 家公司 · {{ total_contacts }} 个联系人</p>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center">
+    {% if ready_count > 0 %}
+    <button class="btn-export" style="border-color:var(--brand);color:#fff;background:var(--brand)" onclick="sendAllReady()" id="send-all-btn">
+      发送待发 ({{ ready_count }})
+    </button>
+    {% endif %}
+    <a href="/contacts/export" class="btn-export">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    导出CSV
+    </a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="cs">
+  <div class="cs-c"><div class="cs-v" style="color:#7c3aed">{{ companies|length }}</div><div class="cs-l">公司</div></div>
+  <div class="cs-c"><div class="cs-v" style="color:var(--text)">{{ total_contacts }}</div><div class="cs-l">联系人</div></div>
+  <div class="cs-c"><div class="cs-v" style="color:#16a34a">{{ verified_count }}</div><div class="cs-l">已验证</div></div>
+  <div class="cs-c"><div class="cs-v" style="color:#0891b2">{{ wa_count }}</div><div class="cs-l">WhatsApp</div></div>
+  <div class="cs-c"><div class="cs-v" style="color:#ea580c">{{ sent_count }}</div><div class="cs-l">已发送</div></div>
+</div>
+
+<!-- Filter Bar -->
+<div class="fbar">
+  <div class="search-wrap">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input type="text" id="search-box" value="{{ q }}" placeholder="搜索公司/联系人/邮箱…" autocomplete="off" oninput="filterGroups(this.value)">
+  </div>
+  <select class="f-select" id="company-filter" onchange="filterByCompany(this.value)">
+    <option value="">全部公司 ({{ companies|length }})</option>
+    {% for co_name in companies.keys() %}
+    <option value="{{ co_name|lower }}" {{ 'selected' if co_name|lower == selected_company }}>{{ co_name }}</option>
+    {% endfor %}
+  </select>
+  <select class="f-select" onchange="location.href=buildUrl('sort',this.value)">
+    <option value="date" {{ 'selected' if sort_by=='date' }}>按日期 ↓</option>
+    <option value="name" {{ 'selected' if sort_by=='name' }}>按名称 A-Z</option>
+    <option value="contacts" {{ 'selected' if sort_by=='contacts' }}>按联系人数 ↓</option>
+  </select>
+</div>
+
+<!-- Chips -->
+<div class="chip-bar">
+  <a href="{{ build_filter_url(country='') }}" class="fchip {{ 'on-v' if not selected_country }}">全部 <span class="fc-b">{{ total_contacts }}</span></a>
+  {% for cname, cnt in country_stats.items() %}
+  <a href="{{ build_filter_url(country=cname) }}" class="fchip {{ 'on-b' if selected_country == cname }}">{{ cname }} <span class="fc-b">{{ cnt }}</span></a>
+  {% endfor %}
+  <span class="chip-sep"></span>
+  <a href="{{ build_filter_url(wa='1' if not wa_only else '') }}" class="fchip {{ 'on-g' if wa_only }}">WhatsApp <span class="fc-b">{{ wa_count }}</span></a>
+  <a href="{{ build_filter_url(ready='1' if not ready_only else '') }}" class="fchip {{ 'on-o' if ready_only }}">待发送 <span class="fc-b">{{ ready_count }}</span></a>
+  <a href="{{ build_filter_url(sent='1' if not sent_only else '') }}" class="fchip {{ 'on-b' if sent_only }}">已发送 <span class="fc-b">{{ sent_count }}</span></a>
+  {% if q or wa_only or ready_only or sent_only or selected_country or selected_company %}<a href="/contacts" class="fchip">✕ 清除</a>{% endif %}
+  <span class="chip-sep"></span>
+  <button id="btn-sel" onclick="toggleSelectMode()" class="fchip" style="border-style:dashed;">☑ 批量操作</button>
+</div>
+
+<!-- Company Groups -->
+{% if companies %}
+  {% for co_name, co_contacts in companies.items() %}
+  {% set has_wa = co_contacts|selectattr("whatsapp")|list|length %}
+  {% set has_ready = co_contacts|selectattr("status","equalto","ready_to_send")|list|length %}
+  {% set has_sent = co_contacts|selectattr("status","equalto","sent")|list|length %}
+  {% set first = co_contacts[0] %}
+  {% set ci = loop.index %}
+
+  <div class="cg {{ 'open' if loop.index <= 3 }}" data-company="{{ co_name|lower }}" data-country="{{ first.country|lower }}">
+    <div class="cg-h" onclick="toggleGroup(this.parentElement)">
+      <input type="checkbox" class="sel-cb" data-company="{{ co_name }}" onclick="event.stopPropagation();updateSelCount()">
+      <div class="cg-left">
+        <div class="cg-ico"><svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M10 11h2M10 15h2M14 11h2M14 15h2M18 11h2M18 15h2M5 7l7-4 7 4"/></svg></div>
+        <div>
+          <div class="cg-name">{{ co_name }}</div>
+          <div class="cg-meta">
+            {{ first.country }}
+            · {{ co_contacts|length }} 人
+            {% if first.found_at %} · {{ first.found_at[:10] }}{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="cg-pills">
+        {% if has_wa %}<span class="pill-sm pill-g">WA ×{{ has_wa }}</span>{% endif %}
+        {% if has_sent %}<span class="pill-sm pill-sent">已发送</span>{% endif %}
+        {% if has_ready %}<span class="pill-sm pill-b">待发送 ×{{ has_ready }}</span>{% endif %}
+        {% if not has_wa and not has_ready and not has_sent %}<span class="pill-sm pill-d">{{ first.status }}</span>{% endif %}
+      </div>
+      <span class="cg-arr">▶</span>
+    </div>
+
+    <div class="cg-body">
+      {% for c in co_contacts %}
+      {% set wa = c.whatsapp or c.phone %}
+      {% set is_dept = not c.name %}
+      <div class="cr">
+        <div class="cr-av {{ 'dept' if is_dept }}">{{ (c.name or '?')[0].upper() }}</div>
+        <div class="cr-info">
+          <div class="cr-name">{{ c.name or '(部门联系)' }}</div>
+          {% if c.title %}<div class="cr-title">{{ c.title }}</div>{% endif %}
+          <div class="cr-ch">
+            {% if wa and wa|length > 5 %}
+            <a href="https://wa.me/{{ wa|replace('+','')|replace(' ','')|replace('-','') }}" target="_blank" class="clink wa" onclick="event.stopPropagation()">📱 {{ wa }}</a>
+            {% endif %}
+            {% if c.email %}
+            <a href="mailto:{{ c.email }}" class="clink email" onclick="event.stopPropagation()">✉ {{ c.email }}</a>
+            {% endif %}
+            {% if c.linkedin %}
+            <a href="{{ c.linkedin }}" target="_blank" class="clink li" onclick="event.stopPropagation()">LinkedIn</a>
+            {% endif %}
+          </div>
+
+          {% if c.source or c.email_status or c.email %}
+          <div class="src-row" onclick="event.stopPropagation()">
+            {% if c.email and '@' in c.email %}
+              {% set edom = c.email.split('@')[1] %}
+              {% if edom and edom not in ['gmail.com','yahoo.com','hotmail.com','outlook.com','qq.com','163.com','126.com','aol.com','icloud.com','protonmail.com'] %}
+              <a href="https://{{ edom }}" target="_blank" class="src-tag">{{ edom }}</a>
+              {% endif %}
+            {% endif %}
+            {% if c.source %}
+              {% set src = c.source %}
+              {% if '·http' in src %}
+                {% set src_parts = src.split('·', 1) %}
+                <a href="{{ src_parts[1] }}" target="_blank" class="src-tag">{{ src_parts[0] }}</a>
+              {% elif 'LinkedIn' in src %}
+                {% if c.linkedin %}<a href="{{ c.linkedin }}" target="_blank" class="src-tag">{{ src }}</a>
+                {% else %}<span class="src-tag">{{ src }}</span>{% endif %}
+              {% elif 'Hunter' in src %}
+                <a href="https://hunter.io/search/{{ c.email.split('@')[1] if c.email and '@' in c.email else '' }}" target="_blank" class="src-tag">{{ src }}</a>
+              {% elif 'FDA' in src %}
+                <a href="https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfrl/rl.cfm" target="_blank" class="src-tag">FDA数据库</a>
+              {% elif 'WHOIS' in src and c.email and '@' in c.email %}
+                <a href="https://who.is/whois/{{ c.email.split('@')[1] }}" target="_blank" class="src-tag">{{ src }}</a>
+              {% elif '官网' in src and c.email and '@' in c.email %}
+                <a href="https://{{ c.email.split('@')[1] }}" target="_blank" class="src-tag">官网</a>
+              {% else %}
+                <span class="src-tag">{{ src[:45] }}</span>
+              {% endif %}
+            {% endif %}
+            {% if c.email_status %}
+              {% if '✅' in c.email_status %}
+                <span class="src-tag st-ok">{{ c.email_status[:40] }}</span>
+              {% elif '❌' in c.email_status %}
+                <span class="src-tag st-fail">{{ c.email_status[:40] }}</span>
+              {% elif '⚠️' in c.email_status %}
+                <span class="src-tag st-warn">{{ c.email_status[:40] }}</span>
+              {% else %}
+                <span class="src-tag">{{ c.email_status[:40] }}</span>
+              {% endif %}
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+
+      {# Draft #}
+      {% set draft = co_contacts|selectattr("email_subject")|first or co_contacts|selectattr("email_body")|first %}
+      {% if draft and (draft.email_subject or draft.email_body) %}
+      <div class="draft" onclick="event.stopPropagation()">
+        <div class="draft-hd">
+          <div class="draft-lbl">📧 开发信草稿</div>
+          <div class="draft-acts">
+            {% set has_sendable = co_contacts|selectattr("status","equalto","ready_to_send")|selectattr("email")|list|length %}
+            {% if has_sendable %}
+            <button class="cp-btn" style="background:#2e7d32" onclick="sendCompany('{{ co_name|e }}',this)">发送邮件</button>
+            {% endif %}
+            {% if draft.email_subject %}<button class="cp-btn" onclick="copyEl('subj-{{ ci }}',this)">主题</button>{% endif %}
+            <button class="cp-btn" onclick="copyEl('body-{{ ci }}',this)">正文</button>
+            <button class="cp-btn" onclick="copyAll('subj-{{ ci }}','body-{{ ci }}',this)">全部</button>
+          </div>
+        </div>
+        {% if draft.email_subject %}<div class="draft-subj" id="subj-{{ ci }}">{{ draft.email_subject }}</div>{% endif %}
+        {% if draft.email_body %}<div class="draft-body" id="body-{{ ci }}">{{ draft.email_body }}</div>{% endif %}
+
+        {% set wa_c = co_contacts|selectattr("whatsapp")|first %}
+        {% if wa_c %}
+        <div class="wa-draft">
+          <div class="wa-draft-text" id="wa-{{ ci }}">Hi, reaching out from our company — we specialize in medical consumables manufacturing (FDA, CE MDR, ISO 13485). Would you be open to discussing supply cooperation?</div>
+          <button class="cp-btn" style="flex-shrink:0;background:#2e7d32" onclick="copyEl('wa-{{ ci }}',this)">复制</button>
+        </div>
+        {% endif %}
+
+        {% if draft.entry_point %}
+        <div class="entry-tag">{{ draft.entry_point[:300] }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {# Intel #}
+      {% set intel = co_contacts|selectattr("analysis_full")|first or co_contacts|selectattr("analysis_snippet")|first %}
+      {% if intel and (intel.analysis_full or intel.analysis_snippet) %}
+      <div class="intel" onclick="event.stopPropagation()">
+        <div class="intel-btn" onclick="toggleIntel(this)">📋 查看背调报告</div>
+        <div class="intel-bd">{{ (intel.analysis_full or intel.analysis_snippet)|safe }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+<div class="empty-st">
+  <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+  <p>暂无联系人</p>
+  <p class="sub">前往工作台启动 Ox，联系人会自动出现在这里</p>
+</div>
+{% endif %}
+
+<!-- 翻页条 -->
+{% if total_pages > 1 %}
+<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px;border-top:1px solid var(--border-light);margin-top:8px">
+  {% if page > 1 %}
+  <a href="{{ build_filter_url(page=page-1) }}" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text-sec);font-size:13px;font-weight:500;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">← 上一页</a>
+  {% endif %}
+
+  {% for p in range(1, total_pages+1) %}
+    {% if p == page %}
+    <span style="padding:7px 13px;border-radius:8px;background:var(--brand);color:#fff;font-size:13px;font-weight:600">{{ p }}</span>
+    {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}
+    <a href="{{ build_filter_url(page=p) }}" style="padding:7px 13px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text-sec);font-size:13px;text-decoration:none;transition:.15s" onmouseover="this.style.background='var(--brand-light)'" onmouseout="this.style.background='var(--white)'">{{ p }}</a>
+    {% elif p == page-3 or p == page+3 %}
+    <span style="color:var(--text-ter);font-size:13px">…</span>
+    {% endif %}
+  {% endfor %}
+
+  {% if page < total_pages %}
+  <a href="{{ build_filter_url(page=page+1) }}" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text-sec);font-size:13px;font-weight:500;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">下一页 →</a>
+  {% endif %}
+
+  <span style="font-size:12px;color:var(--text-ter);margin-left:8px">第 {{ page }}/{{ total_pages }} 页 · 共 {{ total_companies }} 家公司</span>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleGroup(el){el.classList.toggle('open')}
+
+function filterGroups(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('.cg').forEach(el=>{
+    const co=el.dataset.company||'';
+    const body=el.querySelector('.cg-body');
+    const text=body?body.textContent.toLowerCase():'';
+    el.style.display=(!q||co.includes(q)||text.includes(q))?'':'none';
+  });
+}
+
+function filterByCompany(v){
+  if(!v){location.href='/contacts';return}
+  location.href=buildUrl('company',v);
+}
+
+function buildUrl(key,val){
+  const u=new URL(window.location);
+  if(val) u.searchParams.set(key,val);
+  else u.searchParams.delete(key);
+  return u.toString();
+}
+
+function toggleIntel(btn){
+  const bd=btn.nextElementSibling;bd.classList.toggle('show');
+  btn.textContent=bd.classList.contains('show')?'📋 收起报告':'📋 查看背调报告';
+}
+function copyEl(id,btn){const el=document.getElementById(id);if(!el)return;doCopy(el.textContent.trim(),btn)}
+function copyAll(sid,bid,btn){
+  const s=document.getElementById(sid),b=document.getElementById(bid);
+  let t='';if(s)t+='Subject: '+s.textContent.trim()+'\n\n';if(b)t+=b.textContent.trim();doCopy(t,btn);
+}
+function doCopy(text,btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    const o=btn.textContent;btn.textContent='已复制';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('copied')},2000);
+  }).catch(()=>{});
+}
+
+function sendAllReady(){
+  var btn=document.getElementById('send-all-btn');
+  var interval=prompt('每封邮件的发送间隔（秒）：\n建议 10-60 秒，太短可能触发反垃圾','15');
+  if(interval===null)return;
+  interval=parseInt(interval)||15;
+  if(interval<3)interval=3;
+  if(!confirm('确认发送所有待发邮件？间隔 '+interval+' 秒'))return;
+  btn.textContent='已提交…';btn.disabled=true;
+  fetch('/contacts/send',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({interval:interval})})
+    .then(function(r){return r.json()}).then(function(d){
+      if(d.ok){
+        btn.textContent='✓ 发信任务已启动';btn.style.background='#16a34a';
+        alert(d.msg+'\n\n请前往工作台查看发信进度');
+      }else{alert(d.msg);btn.textContent='发送待发';btn.disabled=false;}
+    }).catch(function(){btn.textContent='发送待发';btn.disabled=false;});
+}
+function sendCompany(name,btn){
+  if(!confirm('确认发送 '+name+' 的邮件？'))return;
+  btn.textContent='发送中…';btn.disabled=true;
+  fetch('/contacts/send',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({company:name})})
+    .then(function(r){return r.json()}).then(function(d){
+      if(d.ok){btn.textContent='✓ 已发送';btn.style.background='#22c55e';}
+      else{alert(d.msg);btn.textContent='发送邮件';btn.disabled=false;}
+    }).catch(function(){btn.textContent='发送邮件';btn.disabled=false;});
+}
+
+
+function updateSelCount(){
+  const n = document.querySelectorAll('.sel-cb:checked').length;
+  document.getElementById('sel-count').textContent = n;
+  document.getElementById('batch-bar').style.display = n>0?'flex':'none';
+}
+function clearSel(){
+  document.querySelectorAll('.sel-cb:checked').forEach(cb=>cb.checked=false);
+  updateSelCount();
+}
+async function dismissSelected(){
+  const companies = [...new Set([...document.querySelectorAll('.sel-cb:checked')].map(e=>e.dataset.company))];
+  if(!companies.length) return;
+  if(!confirm(`确认将 ${companies.length} 家公司标记为"已忽略"？（可在DB中恢复）`)) return;
+  // 先拿到这些公司的所有 crm_key
+  const resp = await fetch('/api/contact/keys-by-company',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({companies})});
+  const raw  = await resp.json();
+  const keys = raw.keys||[];
+  if(!keys.length){ alert('未找到联系人记录'); return; }
+  const r = await fetch('/api/contact/dismiss',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({keys})});
+  const d = await r.json();
+  if(d.ok){ location.reload(); }
+  else{ alert('操作失败: '+(d.error||'')); }
+}
+async function deleteSelected(){
+  const companies = [...new Set([...document.querySelectorAll('.sel-cb:checked')].map(e=>e.dataset.company))];
+  if(!companies.length) return;
+  if(!confirm(`⚠️ 彻底删除 ${companies.length} 家公司的所有联系人？此操作不可恢复！`)) return;
+  const resp = await fetch('/api/contact/keys-by-company',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({companies})});
+  const raw  = await resp.json();
+  const keys = raw.keys||[];
+  if(!keys.length){ alert('未找到联系人记录'); return; }
+  const r = await fetch('/api/contact/delete',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({keys})});
+  const d = await r.json();
+  if(d.ok){ location.reload(); }
+  else{ alert('操作失败: '+(d.error||'')); }
+}
+
+// ─── 漏斗动态数据 ──────────────────────────────────────
+(async function(){
+  try{
+    const r=await fetch('/api/funnel');
+    const d=await r.json();
+    if(!d.ok)return;
+    const f=d.funnel;
+    // 更新已发信数字（合并 sent + contacted）
+    const sentEl=document.getElementById('fn-sent');
+    if(sentEl && f.sent>0) sentEl.textContent=f.sent;
+    // 跟进中（有数据才显示）
+    if(f.follow_up>0){
+      document.getElementById('fn-followup-stage').style.display='';
+      document.getElementById('fn-followup').textContent=f.follow_up;
+    }
+    // 已回复
+    if(f.replied>0){
+      document.getElementById('fn-replied-stage').style.display='';
+      document.getElementById('fn-replied').textContent=f.replied;
+    }
+    // 回复率
+    if(d.total_outbound>0){
+      document.getElementById('fn-rate-box').style.display='';
+      document.getElementById('fn-rate').textContent=d.reply_rate+'%';
+    }
+  }catch(e){}
+})();
+
+// ─── 批量选择模式 ──────────────────────────────────────
+var _selMode=false;
+function toggleSelectMode(){
+  _selMode=!_selMode;
+  document.querySelectorAll('.sel-cb').forEach(function(cb){cb.style.display=_selMode?'block':'none';});
+  var btn=document.getElementById('btn-sel');
+  btn.textContent=_selMode?'✕ 退出选择':'☑ 批量操作';
+  btn.style.borderColor=_selMode?'#ea580c':'';
+  btn.style.color=_selMode?'#ea580c':'';
+  if(!_selMode){
+    document.querySelectorAll('.sel-cb').forEach(function(cb){cb.checked=false;});
+    updateSelCount();
+  }
+}
+function updateSelCount(){
+  var n=document.querySelectorAll('.sel-cb:checked').length;
+  document.getElementById('sel-count').textContent=n;
+  document.getElementById('batch-bar').style.display=n>0?'flex':'none';
+}
+function clearSel(){
+  document.querySelectorAll('.sel-cb:checked').forEach(function(cb){cb.checked=false;});
+  updateSelCount();
+}
+async function _getKeys(){
+  var companies=[...new Set([...document.querySelectorAll('.sel-cb:checked')].map(function(e){return e.dataset.company;}))];
+  if(!companies.length)return[];
+  var r=await fetch('/api/contact/keys-by-company',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({companies:companies})});
+  var d=await r.json();
+  return d.keys||[];
+}
+async function dismissSelected(){
+  var n=document.querySelectorAll('.sel-cb:checked').length;
+  if(!n)return;
+  if(!confirm('确认将 '+n+' 家公司标记为已忽略？'))return;
+  var keys=await _getKeys();
+  if(!keys.length){alert('未找到联系人记录');return;}
+  var r=await fetch('/api/contact/dismiss',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:keys})});
+  var d=await r.json();
+  if(d.ok)location.reload();
+  else alert('操作失败: '+(d.error||''));
+}
+async function deleteSelected(){
+  var n=document.querySelectorAll('.sel-cb:checked').length;
+  if(!n)return;
+  if(!confirm('⚠️ 彻底删除 '+n+' 家公司的所有联系人？不可恢复！'))return;
+  var keys=await _getKeys();
+  if(!keys.length){alert('未找到联系人记录');return;}
+  var r=await fetch('/api/contact/delete',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:keys})});
+  var d=await r.json();
+  if(d.ok)location.reload();
+  else alert('操作失败: '+(d.error||''));
+}
+
+</script>
+{% endblock %}

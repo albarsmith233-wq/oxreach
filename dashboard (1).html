@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+{% block title %}控制台 — Ox{% endblock %}
+
+{% block engine_btn %}
+<div id="engine-btn-wrap">
+  {% if state.running %}
+  <button class="engine-btn stop" onclick="stopEngine()">
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+    停止引擎
+  </button>
+  {% else %}
+  <button class="engine-btn go" onclick="startEngine()" {% if not api_ok %}disabled title="需要配置 API Key"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6,3 20,12 6,21"/></svg>
+    启动引擎
+  </button>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+/* ---- Dashboard v5 ---- */
+.dash{max-width:1020px;margin:0 auto;padding:28px 28px 48px}
+
+/* Stats grid */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px}
+.stat{
+  padding:22px 16px 16px;border-radius:14px;
+  background:var(--white);border:1px solid var(--border-light);
+  text-align:center;position:relative;overflow:hidden;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  animation:slideUp .5s ease backwards;cursor:default;
+}
+.stat::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent-color,var(--brand));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .4s cubic-bezier(.4,0,.2,1);
+}
+.stat:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:var(--accent-color,var(--border))}
+.stat:hover::before{transform:scaleX(1)}
+.stat:nth-child(1){animation-delay:0ms}.stat:nth-child(2){animation-delay:60ms}.stat:nth-child(3){animation-delay:120ms}
+.stat:nth-child(4){animation-delay:180ms}.stat:nth-child(5){animation-delay:240ms}
+.stat-icon{font-size:18px;margin-bottom:6px}
+.stat .val{font-size:30px;font-weight:800;letter-spacing:-1px}
+.stat .lbl{font-size:12px;color:var(--text-sec);margin-top:4px;font-weight:500}
+.stat-bar{height:3px;background:var(--border-light);border-radius:3px;margin-top:10px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+.c-v{color:#7c3aed}.c-g{color:#16a34a}.c-c{color:#0891b2}.c-o{color:#ea580c}.c-a{color:#d97706}
+
+/* Two columns */
+.two-col{display:grid;grid-template-columns:1fr 360px;gap:18px}
+
+/* Feed */
+.feed{max-height:440px;overflow-y:auto}
+.f-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 20px;font-size:13px;cursor:default;
+  border-bottom:1px solid var(--border-light);
+  transition:background .15s;
+  animation:slideUp .35s ease backwards;
+}
+.f-item:last-child{border-bottom:none}
+.f-item:hover{background:var(--surface-2)}
+.f-tag{
+  padding:2px 8px;border-radius:4px;font-size:10px;
+  font-weight:700;font-family:'SF Mono','JetBrains Mono',monospace;
+  flex-shrink:0;margin-top:2px;letter-spacing:.5px;
+  transition:transform .2s;
+}
+.f-item:hover .f-tag{transform:scale(1.05)}
+.f-text{flex:1;line-height:1.5;color:var(--text)}
+.f-time{font-size:11px;color:var(--text-ter);font-family:'SF Mono',monospace;flex-shrink:0}
+.ft-found,.ft-sent,.ft-reply{background:#e8f5e9;color:#2e7d32}
+.ft-verify,.ft-scrape,.ft-info{background:#e3f2fd;color:#1565c0}
+.ft-skip,.ft-warning{background:#fff3e0;color:#e65100}
+.ft-fail,.ft-error{background:#ffebee;color:#c62828}
+.ft-draft{background:#f3e5f5;color:#7b1fa2}
+.ft-success{background:#e8f5e9;color:#2e7d32}
+
+/* Config */
+.cfg-row{
+  display:flex;justify-content:space-between;
+  padding:10px 20px;font-size:13px;
+  border-bottom:1px solid var(--border-light);
+  transition:background .15s;
+}
+.cfg-row:last-child{border-bottom:none}
+.cfg-row:hover{background:var(--surface-2)}
+.cfg-row .k{color:var(--text-sec)}
+.cfg-row .v{font-weight:500}
+.cfg-row .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;
+  background:#e3f2fd;color:#1565c0;margin-left:4px}
+.cfg-link{display:block;text-align:center;padding:12px;font-size:13px;color:var(--brand);
+  font-weight:500;border-top:1px solid var(--border-light);transition:.2s}
+.cfg-link:hover{background:var(--brand-light)}
+
+/* Batch */
+.batch-item{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;font-size:13px;
+  border-bottom:1px solid var(--border-light);
+  animation:slideUp .4s ease backwards;
+}
+.batch-item:last-child{border-bottom:none}
+.batch-company{flex:1;font-weight:500}
+.batch-score{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:#f3e5f5;color:#7b1fa2}
+.batch-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;
+  box-shadow:0 0 8px rgba(22,163,74,.5);animation:pulse 1.5s infinite}
+
+/* Balance card */
+.bal-card{font-size:28px;font-weight:800;color:var(--brand);text-align:center;padding:16px}
+
+/* Empty state */
+.empty{text-align:center;padding:48px 16px;color:var(--text-ter)}
+.empty svg{opacity:.3;margin-bottom:8px}
+.empty p{font-size:14px}.empty .sub{font-size:12px;color:var(--text-ter);margin-top:4px}
+
+/* Responsive */
+@media(max-width:768px){
+  .dash{padding:16px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stats .stat:last-child{grid-column:span 2}
+  .two-col{grid-template-columns:1fr}
+}
+
+/* ─── Funnel Pipeline ─── */
+.funnel-pipe{display:flex;align-items:stretch;gap:0;margin-bottom:20px}
+.fnp-stage{flex:1;min-width:0;text-align:center;padding:16px 8px 12px;position:relative;
+  background:var(--white);border:1px solid var(--border-light);transition:.2s}
+.fnp-stage:first-child{border-radius:12px 0 0 12px}
+.fnp-stage:last-child{border-radius:0 12px 12px 0}
+.fnp-stage+.fnp-stage{border-left:none}
+.fnp-stage:hover{background:#f8fafc}
+.fnp-stage .fn-v{font-size:22px;font-weight:800;letter-spacing:-1px;line-height:1}
+.fnp-stage .fn-l{font-size:11px;color:var(--text-sec);margin-top:5px;font-weight:500}
+.fnp-stage .fn-arr{position:absolute;right:-7px;top:50%;transform:translateY(-50%);z-index:1;
+  width:14px;height:14px;color:var(--text-sec);opacity:.35}
+.fnp-hi{background:#f0fdf4!important;border-color:#bbf7d0!important}
+.fnp-rate{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 20px;min-width:72px;background:var(--white);border:1px solid var(--border-light);
+  border-left:none;border-radius:0 12px 12px 0}
+.fnp-rate .fn-v{font-size:20px;font-weight:800;color:#16a34a}
+
+/* ─── Send Progress Bar ─── */
+.send-prog{margin-bottom:20px;padding:16px 20px;border-radius:12px;
+  background:var(--white);border:1px solid var(--border-light);display:none}
+.send-prog.active{display:block;animation:slideUp .4s ease}
+.sp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sp-head span{font-size:13px;font-weight:600;color:var(--text)}
+.sp-stop{font-size:12px;padding:4px 12px;border-radius:6px;border:1px solid #dc2626;
+  background:transparent;color:#dc2626;cursor:pointer;font-family:inherit}
+.sp-stop:hover{background:#fef2f2}
+.sp-bar{height:6px;background:var(--border-light);border-radius:6px;overflow:hidden}
+.sp-fill{height:100%;background:linear-gradient(90deg,#ea580c,#f59e0b);border-radius:6px;
+  transition:width .6s ease}
+.sp-detail{font-size:12px;color:var(--text-sec);margin-top:8px}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash">
+
+  <!-- ALERTS -->
+  {% if not api_ok %}
+  <div class="alert alert-error">⚠ ANTHROPIC_API_KEY 未配置 — 请在 <a href="/settings">设置</a> 中添加</div>
+  {% endif %}
+  {% if not smtp_ok %}
+  <div class="alert alert-info">📧 SMTP 未配置 — 引擎正常运行，草稿保存在「联系人」页面，但不会自动发送。<a href="/settings">去配置</a></div>
+  {% endif %}
+
+  <!-- STATS -->
+  {% set s = state.stats %}
+  <div class="stats" id="stats-grid">
+    <div class="stat" style="--accent-color:#7c3aed">
+      <div class="stat-icon">🔍</div>
+      <div class="val c-v" data-key="companies_found">{{ s.get('companies_found',0) }}</div>
+      <div class="lbl">发现公司</div>
+    </div>
+    <div class="stat" style="--accent-color:#16a34a">
+      <div class="stat-icon">✓</div>
+      <div class="val c-g" data-key="contacts_verified">{{ s.get('contacts_verified',0) }}</div>
+      <div class="lbl">已验证联系人</div>
+    </div>
+    <div class="stat" style="--accent-color:#0891b2">
+      <div class="stat-icon">💬</div>
+      <div class="val c-c" data-key="whatsapp_found">{{ s.get('whatsapp_found',0) }}</div>
+      <div class="lbl">WhatsApp</div>
+    </div>
+    <div class="stat" style="--accent-color:#ea580c">
+      <div class="stat-icon">✉</div>
+      <div class="val c-o" data-key="emails_sent">{{ s.get('emails_sent',0) }}</div>
+      <div class="lbl">已发邮件</div>
+    </div>
+    <div class="stat" style="--accent-color:#d97706">
+      <div class="stat-icon">📩</div>
+      <div class="val c-a" data-key="replies_detected">{{ s.get('replies_detected',0) }}</div>
+      <div class="lbl">收到回复</div>
+    </div>
+  </div>
+
+  <!-- FUNNEL PIPELINE -->
+  <div class="funnel-pipe" id="funnel-pipe">
+    <div class="fnp-stage"><div class="fn-v" id="fnp-discovered" style="color:#7c3aed">-</div><div class="fn-l">已发现</div><svg class="fn-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+    <div class="fnp-stage"><div class="fn-v" id="fnp-ready" style="color:var(--text)">-</div><div class="fn-l">待发送</div><svg class="fn-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+    <div class="fnp-stage"><div class="fn-v" id="fnp-sent" style="color:#0891b2">-</div><div class="fn-l">已发信</div><svg class="fn-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+    <div class="fnp-stage"><div class="fn-v" id="fnp-followup" style="color:#d97706">-</div><div class="fn-l">跟进中</div><svg class="fn-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+    <div class="fnp-stage fnp-hi"><div class="fn-v" id="fnp-replied" style="color:#16a34a">-</div><div class="fn-l">已回复</div></div>
+    <div class="fnp-rate"><div class="fn-v" id="fnp-rate">-%</div><div class="fn-l">回复率</div></div>
+  </div>
+
+  <!-- SEND PROGRESS BAR -->
+  <div class="send-prog" id="send-prog">
+    <div class="sp-head">
+      <span id="sp-title">发信中…</span>
+      <button class="sp-stop" onclick="stopSending()">停止发信</button>
+    </div>
+    <div class="sp-bar"><div class="sp-fill" id="sp-fill" style="width:0%"></div></div>
+    <div class="sp-detail" id="sp-detail"></div>
+  </div>
+
+  <!-- TWO COL: FEED + RIGHT -->
+  <div class="two-col">
+
+    <!-- Activity Feed -->
+    <div class="card slide-up" style="animation-delay:100ms">
+      <div class="card-head">
+        <span style="font-weight:600">实时日志</span>
+        <button class="icon-btn" onclick="location.reload()" title="刷新">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+      <div class="feed" id="activity-feed">
+        {% if state.recent_activity %}
+          {% for item in state.recent_activity[:15] %}
+          <div class="f-item" style="animation-delay:{{ loop.index * 40 }}ms">
+            <span class="f-tag ft-{{ item.level }}">{{ item.tag|default(item.level|upper) }}</span>
+            <span class="f-text">{{ item.text }}</span>
+            <span class="f-time">{{ item.time }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="empty">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <p>暂无动态</p>
+          <p class="sub">启动引擎后，实时日志将显示在这里</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div style="display:flex;flex-direction:column;gap:18px">
+
+      <!-- Current Batch -->
+      {% if state.current_batch %}
+      <div class="card slide-up" style="animation-delay:160ms">
+        <div class="card-head">
+          <span style="font-weight:600">当前批次</span>
+          <span style="font-size:12px;color:var(--green);font-weight:600">进行中</span>
+        </div>
+        {% for c in state.current_batch %}
+        <div class="batch-item" style="animation-delay:{{ 200 + loop.index * 60 }}ms">
+          {% if loop.first %}<div class="batch-dot"></div>{% else %}<div style="width:7px;height:7px;border-radius:50%;background:var(--border)"></div>{% endif %}
+          <span class="batch-company">{{ c.name or c.company }}</span>
+          {% if c.score %}<span class="batch-score">{{ c.score }}分</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Config Summary -->
+      <div class="card slide-up" style="animation-delay:220ms">
+        <div class="card-head"><span style="font-weight:600">配置概览</span></div>
+        <div class="cfg-row"><span class="k">目标市场</span><span class="v">{% for c in cfg.get('countries',['UK','Germany','France']) %}<span class="tag">{{ c }}</span>{% endfor %}</span></div>
+        <div class="cfg-row"><span class="k">产品线</span><span class="v">{{ cfg.get('product','医用纱布 / 绷带 / 敷料')|truncate(20) }}</span></div>
+        <div class="cfg-row"><span class="k">每批目标数</span><span class="v">{{ cfg.get('n_targets',5) }} 家</span></div>
+        <div class="cfg-row"><span class="k">批次间隔</span><span class="v">{{ cfg.get('batch_interval_minutes',120) }} 分钟</span></div>
+        <div class="cfg-row"><span class="k">自动发信</span><span class="v" style="color:{{ 'var(--green)' if not cfg.get('dry_run',True) else 'var(--text-ter)' }}">{{ '开启' if not cfg.get('dry_run',True) else '关闭' }}</span></div>
+        <a class="cfg-link" href="/settings">修改配置 →</a>
+      </div>
+
+      <!-- Balance -->
+      <div class="card slide-up" style="animation-delay:280ms">
+        <div class="card-head"><span style="font-weight:600">账户余额</span></div>
+        <div class="bal-card" id="user-balance">--</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* Engine actions */
+async function startEngine(){
+  const wrap=document.getElementById('engine-btn-wrap');
+  const b=wrap?.querySelector('button');
+  if(b){b.disabled=true;b.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg> 启动中…'}
+  try{
+    const r=await fetch('/start',{method:'POST'});
+    const d=await r.json();
+    if(d.ok)setTimeout(()=>location.reload(),1200);
+    else{alert('启动失败：'+(d.error||'未知错误'));if(b){b.disabled=false;b.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6,3 20,12 6,21"/></svg> 启动引擎'}}
+  }catch(e){alert('错误：'+e);if(b){b.disabled=false}}
+}
+async function stopEngine(){
+  const wrap=document.getElementById('engine-btn-wrap');
+  const b=wrap?.querySelector('button');
+  if(b){b.disabled=true;b.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg> 停止中…'}
+  await fetch('/stop',{method:'POST'});
+  setTimeout(()=>location.reload(),1200);
+}
+
+/* SSE / polling */
+let sse;
+try{
+  sse=new EventSource('/stream');
+  sse.onmessage=e=>{try{updateUI(JSON.parse(e.data))}catch(err){}};
+  sse.onerror=()=>{sse.close();startPolling()};
+}catch(e){startPolling()}
+function startPolling(){setInterval(()=>fetch('/api/state').then(r=>r.json()).then(updateUI).catch(()=>{}),4000)}
+
+/* Tag class mapping */
+function tagClass(level){
+  const m={info:'ft-info',success:'ft-success',warning:'ft-warning',error:'ft-error',found:'ft-found',sent:'ft-sent',reply:'ft-reply'};
+  return m[level]||'ft-info';
+}
+
+function updateUI(s){
+  /* Topbar status */
+  const dot=document.getElementById('topbar-status-dot');
+  if(dot)dot.className='status-dot'+(s.running?' on':'');
+  const stBadge=document.getElementById('topbar-status');
+  if(stBadge)stBadge.className='topbar-badge status'+(s.running?' on':'');
+  const stText=document.getElementById('topbar-status-text');
+  if(stText)stText.textContent=s.running?'运行中':'已停止';
+
+  /* Stats */
+  if(s.stats){
+    document.querySelectorAll('[data-key]').forEach(el=>{
+      const v=s.stats[el.dataset.key];
+      if(v!==undefined)el.textContent=v;
+    });
+  }
+
+  /* Engine button in sidebar */
+  const wrap=document.getElementById('engine-btn-wrap');
+  if(wrap){
+    wrap.innerHTML=s.running
+      ?'<button class="engine-btn stop" onclick="stopEngine()"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>停止引擎</button>'
+      :'<button class="engine-btn go" onclick="startEngine()"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6,3 20,12 6,21"/></svg>启动引擎</button>';
+  }
+
+  /* Feed */
+  if(s.recent_activity&&s.recent_activity.length){
+    const feed=document.getElementById('activity-feed');
+    if(feed)feed.innerHTML=s.recent_activity.slice(0,15).map((i,idx)=>
+      `<div class="f-item" style="animation-delay:${idx*40}ms"><span class="f-tag ${tagClass(i.level)}">${(i.tag||i.level||'INFO').toUpperCase()}</span><span class="f-text">${i.text}</span><span class="f-time">${i.time}</span></div>`
+    ).join('');
+  }
+}
+
+/* Balance */
+fetch('/api/balance').then(r=>r.json()).then(d=>{
+  const el=document.getElementById('user-balance');
+  if(el)el.textContent='¥'+d.balance.toFixed(1);
+}).catch(()=>{});
+
+
+/* ─── 转化漏斗加载 ─── */
+(function loadFunnel(){
+  fetch('/api/funnel').then(function(r){return r.json()}).then(function(d){
+    if(!d.ok)return;
+    var f=d.funnel;
+    document.getElementById('fnp-discovered').textContent=f.discovered||0;
+    document.getElementById('fnp-ready').textContent=f.ready||0;
+    document.getElementById('fnp-sent').textContent=f.sent||0;
+    document.getElementById('fnp-followup').textContent=f.follow_up||0;
+    document.getElementById('fnp-replied').textContent=f.replied||0;
+    document.getElementById('fnp-rate').textContent=(d.reply_rate||0)+'%';
+  }).catch(function(){});
+})();
+
+/* ─── 发信进度轮询 ─── */
+var _spTimer=null;
+function pollSendProgress(){
+  _spTimer=setInterval(function(){
+    fetch('/api/send-progress').then(function(r){return r.json()}).then(function(d){
+      var box=document.getElementById('send-prog');
+      if(!d.running && !d.total){box.classList.remove('active');return;}
+      box.classList.add('active');
+      var pct=d.total>0?Math.round((d.sent+d.failed)/d.total*100):0;
+      document.getElementById('sp-fill').style.width=pct+'%';
+      document.getElementById('sp-title').textContent=
+        d.running?'发信中 '+d.sent+'/'+d.total:'发信完成 ✓ '+d.sent+' 封成功';
+      document.getElementById('sp-detail').textContent=
+        d.running?(d.current||'准备中…'):'失败 '+d.failed+' 封'+(d.errors&&d.errors.length?' — '+d.errors[0]:'');
+      document.querySelector('.sp-stop').style.display=d.running?'':'none';
+      if(!d.running){clearInterval(_spTimer);_spTimer=null;}
+    }).catch(function(){});
+  },2000);
+}
+pollSendProgress();
+
+function stopSending(){
+  if(!confirm('确认停止发信？'))return;
+  fetch('/api/send-progress/stop',{method:'POST'});
+}
+
+</script>
+{% endblock %}

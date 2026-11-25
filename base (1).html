@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Ox{% endblock %}</title>
+<style>
+/* ============================================================
+   OX DESIGN SYSTEM v5 — Gmail-inspired Light Clean
+   ============================================================ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  /* Surface — 暖米色系 */
+  --bg:#faf7f4;
+  --white:#ffffff;
+  --surface:#ffffff;
+  --surface-2:#f5f1ed;
+  --border:#e5ddd5;
+  --border-light:#efe9e3;
+
+  /* Text — 暖灰 */
+  --text:#2d2924;
+  --text-sec:#6b6560;
+  --text-ter:#9a918a;
+
+  /* Brand — 暖棕橙 */
+  --brand:#c2702b;
+  --brand-light:#fdf4ec;
+  --brand-ring:#f0d4b8;
+
+  /* Semantic */
+  --green:#3d8c5c;
+  --green-bg:#f2f9f5;
+  --green-border:#c5e5d2;
+  --blue:#4a7fb5;
+  --blue-bg:#f0f5fb;
+  --cyan:#3d8c97;
+  --amber:#b8862b;
+  --red:#c45040;
+  --red-bg:#fdf2f0;
+  --violet:#7a5cad;
+
+  /* Layout */
+  --sidebar-w:260px;
+}
+
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Segoe UI',system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  -webkit-font-smoothing:antialiased;min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.layout{display:flex;min-height:100vh}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar{
+  width:var(--sidebar-w);position:fixed;top:0;bottom:0;left:0;z-index:50;
+  background:var(--bg);
+  display:flex;flex-direction:column;padding:8px 12px;
+  overflow-y:auto;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+
+/* Logo */
+.sb-logo{display:flex;align-items:center;gap:8px;padding:14px 12px 22px}
+.sb-logo-mark{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,#c2702b,#d4915f);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#fff;
+  box-shadow:0 2px 8px rgba(194,112,43,.25);
+  transition:transform .2s,box-shadow .2s;
+}
+.sb-logo-mark:hover{transform:scale(1.08) rotate(-3deg);box-shadow:0 4px 16px rgba(234,88,12,.4)}
+.sb-logo-text{font-weight:700;font-size:20px;letter-spacing:-.5px}
+.sb-logo-sub{font-size:10px;color:var(--text-ter);letter-spacing:.3px}
+
+/* Engine Button (replaces Gmail Compose) */
+.engine-btn{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 24px;border-radius:16px;border:none;
+  font-weight:600;font-size:14px;cursor:pointer;
+  font-family:inherit;margin-bottom:16px;
+  box-shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;
+}
+.engine-btn.go{background:var(--brand-light);color:var(--brand)}
+.engine-btn.go:hover{background:#fed7aa;transform:translateY(-1px);box-shadow:0 4px 16px rgba(234,88,12,.2)}
+.engine-btn.stop{background:var(--red-bg);color:var(--red)}
+.engine-btn.stop:hover{background:#fecaca;transform:translateY(-1px);box-shadow:0 4px 16px rgba(220,38,38,.15)}
+.engine-btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.engine-btn svg{width:16px;height:16px;transition:transform .3s}
+.engine-btn:hover svg{transform:scale(1.15)}
+
+/* Nav */
+.sb-nav{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.nav-group{position:relative}
+.nav-item{
+  display:flex;align-items:center;gap:14px;
+  padding:8px 18px;border-radius:24px;
+  font-size:14px;font-weight:500;color:var(--text);
+  cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+.nav-item:hover{background:#efe9e3}
+.nav-item.active{background:#f3e8dc;color:var(--brand);font-weight:700;box-shadow:inset 0 0 0 1px rgba(194,112,43,.12)}
+.nav-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;
+  color:var(--text-sec);transition:color .2s,transform .2s}
+.nav-item.active svg{color:var(--brand)}
+.nav-item:hover svg{transform:scale(1.08)}
+.nav-badge{margin-left:auto;font-size:12px;font-weight:600;color:var(--text-sec)}
+
+/* Chevron arrow */
+.nav-chev{margin-left:auto;width:12px!important;height:12px!important;
+  stroke:var(--text-ter)!important;opacity:.4;transition:opacity .2s,transform .2s}
+.nav-group.open .nav-chev{opacity:.9;transform:rotate(90deg)!important}
+
+/* Hover submenu flyout */
+.nav-sub{
+  display:none;
+  padding:2px 0 6px 32px;
+  overflow:hidden;
+}
+.nav-group.open .nav-sub{display:block}
+.nav-sub a{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:8px;
+  font-size:13px;color:var(--text-sec);font-weight:500;
+  transition:all .15s;white-space:nowrap;
+  position:relative;
+}
+.nav-sub a::before{
+  content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--border);
+  transition:background .15s;
+}
+.nav-sub a:hover{background:var(--brand-light);color:var(--brand)}
+.nav-sub a:hover::before{background:var(--brand)}
+.nav-sub a.active-sub{color:var(--brand);font-weight:600}
+.nav-sub a.active-sub::before{background:var(--brand)}
+
+/* User card at bottom */
+.sb-user{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px;border-top:1px solid var(--border);margin-top:auto;
+  border-radius:12px;transition:background .2s;
+}
+.sb-user:hover{background:#efe9e3}
+.sb-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#c2702b,#d4915f);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:13px;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(194,112,43,.2);
+}
+.sb-name{font-weight:600;font-size:13px}
+.sb-email{font-size:11px;color:var(--text-ter);word-break:break-all}
+.sb-role-tag{
+  display:inline-block;font-size:10px;font-weight:600;
+  padding:1px 8px;border-radius:99px;margin-top:2px;
+}
+.sb-role-tag.admin{background:rgba(234,88,12,.1);color:var(--brand)}
+.sb-role-tag.user{background:var(--green-bg);color:var(--green)}
+.sb-smtp-dot{
+  width:8px;height:8px;border-radius:50%;margin-left:auto;flex-shrink:0;
+}
+.sb-smtp-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(22,163,74,.5)}
+.sb-smtp-dot.err{background:var(--text-ter)}
+
+/* Logout */
+.nav-item.logout{color:var(--red);margin-top:4px}
+.nav-item.logout:hover{background:var(--red-bg)}
+
+/* ============================================================
+   MAIN AREA
+   ============================================================ */
+.main{flex:1;margin-left:var(--sidebar-w);min-height:100vh;position:relative;overflow-x:hidden;
+  display:flex;flex-direction:column}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:8px 20px;border-bottom:1px solid var(--border-light);
+  background:var(--white);flex-shrink:0;
+}
+.search-box{
+  flex:1;max-width:720px;display:flex;align-items:center;gap:10px;
+  padding:10px 18px;border-radius:24px;
+  background:#f2ede8;border:1px solid transparent;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.search-box:focus-within{
+  background:var(--white);border-color:var(--blue);
+  box-shadow:0 2px 8px rgba(26,115,232,.2);
+}
+.search-box svg{color:var(--text-ter);flex-shrink:0}
+.search-box input{
+  flex:1;border:none;outline:none;background:transparent;
+  font-size:15px;color:var(--text);font-family:inherit;
+}
+.search-box input::placeholder{color:#9aa0a6}
+
+.topbar-badge{
+  padding:6px 14px;border-radius:20px;font-weight:600;font-size:13px;
+  transition:all .25s;cursor:default;
+}
+.topbar-badge.balance{background:var(--brand-light);color:var(--brand);border:1px solid var(--brand-ring)}
+.topbar-badge.balance:hover{box-shadow:0 2px 8px rgba(234,88,12,.15);transform:translateY(-1px)}
+.topbar-badge.status{
+  display:flex;align-items:center;gap:6px;
+  border:1px solid var(--border);background:#f9fafb;
+  color:var(--text-ter);font-weight:500;font-size:12px;
+}
+.topbar-badge.status.on{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--text-ter);transition:all .3s;
+}
+.status-dot.on{
+  background:var(--green);
+  box-shadow:0 0 8px rgba(22,163,74,.5);
+  animation:pulse 1.5s infinite;
+}
+
+/* ============================================================
+   CONTENT AREA
+   ============================================================ */
+.content-area{flex:1;overflow-y:auto;background:var(--white)}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+.mobile-header{display:none;align-items:center;justify-content:space-between;padding:10px 16px;
+  position:sticky;top:0;z-index:40;background:var(--white);border-bottom:1px solid var(--border-light)}
+.m-logo{font-weight:700;font-size:18px;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+.m-logo-mark{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#c2702b,#d4915f);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff}
+.m-avatar{width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,#c2702b,#d4915f);
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700}
+
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
+  background:var(--white);border-top:1px solid var(--border-light);
+  padding:4px 0 env(safe-area-inset-bottom,4px);
+}
+.bnav-inner{display:flex;justify-content:space-around;max-width:400px;margin:0 auto}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;
+  font-size:10px;color:var(--text-ter);transition:.2s;-webkit-tap-highlight-color:transparent}
+.bnav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.bnav-item.active{color:var(--brand)}
+.bnav-item.active svg{stroke:var(--brand)}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .main{margin-left:0}
+  .mobile-header{display:flex}
+  .bottom-nav{display:block}
+  .main{padding-bottom:70px}
+  .topbar{display:none}
+}
+
+/* ============================================================
+   SHARED UTILITY CLASSES
+   ============================================================ */
+/* Cards */
+.card{
+  border-radius:14px;border:1px solid var(--border-light);
+  background:var(--white);overflow:hidden;
+  transition:box-shadow .3s,border-color .3s;
+}
+.card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);border-color:var(--border)}
+.card-head{
+  padding:14px 20px;border-bottom:1px solid var(--border-light);
+  display:flex;align-items:center;justify-content:space-between;font-size:14px;
+}
+
+/* Buttons */
+.btn-primary{
+  padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;
+  background:var(--brand);color:#fff;transition:.25s;font-family:inherit;
+}
+.btn-primary:hover{background:#c2410c;transform:translateY(-1px);box-shadow:0 4px 12px rgba(234,88,12,.25)}
+.btn-secondary{
+  padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;
+  border:1px solid var(--border);cursor:pointer;
+  background:transparent;color:var(--text);transition:.2s;font-family:inherit;
+}
+.btn-secondary:hover{border-color:var(--text-sec);background:var(--surface-2)}
+
+/* Icon button */
+.icon-btn{
+  display:inline-flex;border:none;background:none;cursor:pointer;
+  padding:6px;border-radius:50%;color:var(--text-ter);transition:all .2s;
+}
+.icon-btn:hover{background:#e8eaed;color:var(--text-sec)}
+
+/* Form fields */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text-sec);margin-bottom:6px}
+.field input,.field select,.field textarea{
+  width:100%;padding:10px 14px;
+  background:var(--white);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:.2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.12);
+}
+.field input::placeholder,.field textarea::placeholder{color:#9aa0a6}
+.field textarea{resize:vertical;min-height:80px}
+.field select{cursor:pointer;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%235f6368' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center}
+
+/* Tags */
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600}
+.tag-green{background:#e8f5e9;color:#2e7d32}
+.tag-orange{background:#fff3e0;color:#e65100}
+.tag-blue{background:#e3f2fd;color:#1565c0}
+.tag-violet{background:#f3e5f5;color:#7b1fa2}
+.tag-red{background:#ffebee;color:#c62828}
+
+/* Alerts */
+.alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.alert a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.alert-error{background:#ffebee;border:1px solid #ffcdd2;color:#c62828}
+.alert-info{background:#e3f2fd;border:1px solid #bbdefb;color:#1565c0}
+.alert-success{background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+  padding:10px 24px;border-radius:8px;
+  background:#3d3630;color:#fff;font-size:13px;font-weight:500;
+  box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:999;
+  animation:toastIn .25s ease,toastOut .3s ease 1.8s forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d5cdc5;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#b0a79e}
+
+/* Animations */
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translate(-50%,10px)}}
+@keyframes rowIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn .3s ease}
+.slide-up{animation:slideUp .4s ease backwards}
+/* Sidebar section labels (MangoDisk style) */
+.sb-section{
+  font-size:11px;font-weight:600;color:var(--text-ter);
+  padding:18px 18px 6px;letter-spacing:.4px;
+  text-transform:uppercase;
+}
+.sb-section:first-child{padding-top:8px}
+.sb-divider{height:1px;background:var(--border-light);margin:8px 12px}
+</style>
+
+
+{% block head_extra %}{% endblock %}
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="layout">
+
+  <!-- ====== SIDEBAR ====== -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">Ox</div>
+      <div>
+        <div class="sb-logo-text">Ox</div>
+        <div class="sb-logo-sub">B2B 智能获客引擎</div>
+      </div>
+    </div>
+
+    <!-- Engine start/stop — injected by child templates via #engine-btn-slot -->
+    <div id="engine-btn-slot">{% block engine_btn %}{% endblock %}</div>
+
+    <nav class="sb-nav">
+      <div class="sb-section">工作台</div>
+      <div class="nav-group">
+        <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if request.endpoint=='dashboard' }}">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          工作台
+          <svg class="nav-chev" viewBox="0 0 24 24" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a href="{{ url_for('dashboard') }}">📊 实时日志</a>
+          <a href="{{ url_for('dashboard') }}">⚙️ 配置概览</a>
+          <a href="{{ url_for('dashboard') }}">📋 当前批次</a>
+        </div>
+      </div>
+      <div class="sb-section">客户管理</div>
+      <div class="nav-group">
+        <a href="{{ url_for('contacts') }}" class="nav-item {{ 'active' if request.endpoint=='contacts' }}">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          联系人
+          <svg class="nav-chev" viewBox="0 0 24 24" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a href="{{ url_for('contacts') }}">📋 全部</a>
+          <a href="{{ url_for('contacts') }}?wa=1">📱 WhatsApp</a>
+          <a href="{{ url_for('contacts') }}?sent=1">✉️ 已发送</a>
+          <a href="/contacts/export">⬇️ 导出CSV</a>
+        </div>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-section">系统</div>
+      <div class="nav-group">
+        <a href="{{ url_for('settings') }}" class="nav-item {{ 'active' if request.endpoint in ['settings','settings_save'] }}">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          设置
+          <svg class="nav-chev" viewBox="0 0 24 24" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a href="{{ url_for('settings') }}#smtp">📧 邮件发送</a>
+          <a href="{{ url_for('settings') }}#api">🔑 API 密钥</a>
+          <a href="{{ url_for('settings') }}#company">🏢 公司档案</a>
+          <a href="{{ url_for('settings') }}#target">🎯 开发目标</a>
+          <a href="{{ url_for('settings') }}#imap">📥 收件检测</a>
+        </div>
+      </div>
+      {% if role == 'admin' %}
+      <div class="nav-group">
+        <a href="{{ url_for('admin') }}" class="nav-item {{ 'active' if request.endpoint in ['admin','admin_add','admin_delete'] }}">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          管理
+          <svg class="nav-chev" viewBox="0 0 24 24" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a href="{{ url_for('admin') }}#users">👥 用户</a>
+          <a href="{{ url_for('admin') }}#usage">📊 使用量</a>
+          <a href="{{ url_for('admin') }}#billing">💰 账单</a>
+          <a href="{{ url_for('admin') }}#balance">💳 余额</a>
+        </div>
+      </div>
+      {% endif %}
+    </nav>
+
+    <!-- User card -->
+    <div class="sb-user">
+      <div class="sb-avatar">{{ (name or username)[:1]|upper }}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sb-name">{{ name or username }}</div>
+        <div class="sb-email">{{ email }}</div>
+        <span class="sb-role-tag {{ 'admin' if role=='admin' else 'user' }}">
+          {{ '管理员' if role=='admin' else '操作员' }}
+        </span>
+      </div>
+      <div class="sb-smtp-dot {{ 'ok' if smtp_ok else 'err' }}" title="{{ 'SMTP 已连' if smtp_ok else 'SMTP 未配置' }}"></div>
+    </div>
+
+    <a href="{{ url_for('logout') }}" class="nav-item logout">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      退出登录
+    </a>
+  </aside>
+
+  <!-- ====== MAIN ====== -->
+  <main class="main">
+
+    <!-- Mobile top bar -->
+    <div class="mobile-header">
+      <div class="m-logo">
+        <div class="m-logo-mark">Ox</div>
+        Ox
+      </div>
+      <div class="m-avatar">{{ (name or username)[:1]|upper }}</div>
+    </div>
+
+    <!-- Topbar — search + badges -->
+    {% block topbar %}
+    <header class="topbar">
+      <div class="search-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input placeholder="搜索联系人、公司、邮箱..." id="global-search">
+      </div>
+      <div class="topbar-badge balance" id="topbar-balance">余额 --</div>
+      <div class="topbar-badge status {{ 'on' if state is defined and state.running else '' }}" id="topbar-status">
+        <div class="status-dot {{ 'on' if state is defined and state.running else '' }}" id="topbar-status-dot"></div>
+        <span id="topbar-status-text">{{ '运行中' if state is defined and state.running else '已停止' }}</span>
+      </div>
+    </header>
+    {% endblock %}
+
+    <!-- Page content -->
+    <div class="content-area">
+      {% block content %}{% endblock %}
+    </div>
+
+    <!-- Mobile bottom nav -->
+    <nav class="bottom-nav">
+      <div class="bnav-inner">
+        <a href="{{ url_for('dashboard') }}" class="bnav-item {{ 'active' if request.endpoint=='dashboard' }}">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          工作台
+        </a>
+        <a href="{{ url_for('contacts') }}" class="bnav-item {{ 'active' if request.endpoint=='contacts' }}">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          联系人
+        </a>
+        <a href="{{ url_for('settings') }}" class="bnav-item {{ 'active' if request.endpoint in ['settings','settings_save'] }}">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          设置
+        </a>
+        {% if role == 'admin' %}
+        <a href="{{ url_for('admin') }}" class="bnav-item {{ 'active' if request.endpoint in ['admin','admin_add','admin_delete'] }}">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          管理
+        </a>
+        {% endif %}
+      </div>
+    </nav>
+
+  </main>
+</div>
+
+<!-- Global balance fetch -->
+<script>
+fetch('/api/balance').then(r=>r.json()).then(d=>{
+  const el=document.getElementById('topbar-balance');
+  if(el)el.textContent='余额 ¥'+d.balance.toFixed(1);
+}).catch(()=>{});
+
+/* Sidebar submenu — click to expand inline */
+document.querySelectorAll('.nav-group').forEach(g=>{
+  const sub=g.querySelector('.nav-sub');
+  const item=g.querySelector('.nav-item');
+  if(!sub||!item)return;
+  // 如果当前页面在子菜单范围内，自动展开
+  if(sub.querySelector('a.active-sub')||item.classList.contains('active')){
+    g.classList.add('open');
+  }
+  item.addEventListener('click',function(e){
+    // 如果点击的是nav-item本身的链接，先切换展开状态
+    const isDirectLink=item.getAttribute('href')&&item.getAttribute('href')!='#';
+    if(isDirectLink && !item.classList.contains('active')){
+      // 直接跳转，不阻止
+      return;
+    }
+    e.preventDefault();
+    g.classList.toggle('open');
+  });
+});
+</script>
+
+<!-- ═══ Patch v2: 跟进提醒浮窗 ═══ -->
+<div id="fu-toast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;
+  width:360px;max-height:440px;background:var(--white);border:1px solid var(--border);
+  border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.12);font-size:.8rem;overflow:hidden;
+  font-family:Inter,system-ui,sans-serif">
+  <div style="padding:.65rem 1rem;border-bottom:1px solid var(--border,#27272a);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-weight:700;color:var(--amber,#f59e0b);font-size:.82rem">🔔 待跟进客户</span>
+    <span id="fu-close" style="cursor:pointer;color:var(--text-dim,#71717a);font-size:1.2rem;line-height:1">&times;</span>
+  </div>
+  <div id="fu-list" style="padding:.5rem;max-height:340px;overflow-y:auto"></div>
+</div>
+<script>
+(function(){
+  var dismissed={};
+  function ck(){
+    fetch('/api/followup/due').then(function(r){return r.json()}).then(function(d){
+      if(!d.count)return;
+      var items=d.items.filter(function(i){return !dismissed[i.key]});
+      if(!items.length)return;
+      var box=document.getElementById('fu-toast'),
+          list=document.getElementById('fu-list');
+      list.innerHTML=items.slice(0,5).map(function(i){
+        return '<div style="padding:.55rem .7rem;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.12);border-radius:10px;margin-bottom:.4rem">'
+          +'<div style="font-weight:600;color:var(--text,#e4e4e7);font-size:.82rem">'+i.company+'</div>'
+          +'<div style="font-size:.68rem;color:var(--text-dim,#a1a1aa);margin-top:.15rem">'
+          +(i.contact||'')+' · '+i.email+' · R'+i.round+' · 逾期'+i.overdue+'天</div>'
+          +'<div style="margin-top:.4rem;display:flex;gap:.3rem">'
+          +'<button onclick="fuSend(''+i.key+'',this)" style="font-size:.63rem;padding:.2rem .55rem;border-radius:99px;border:none;background:var(--violet,#8b5cf6);color:#fff;cursor:pointer;font-family:inherit">发送跟进</button>'
+          +'<button onclick="fuPrev(''+i.key+'')" style="font-size:.63rem;padding:.2rem .55rem;border-radius:99px;border:1px solid var(--border,#27272a);background:transparent;color:var(--text-dim,#a1a1aa);cursor:pointer;font-family:inherit">预览</button>'
+          +'<button onclick="fuDism(''+i.key+'')" style="font-size:.63rem;padding:.2rem .55rem;border-radius:99px;border:1px solid var(--border,#27272a);background:transparent;color:var(--text-muted,#71717a);cursor:pointer;font-family:inherit">推迟3天</button>'
+          +'</div></div>';
+      }).join('');
+      box.style.display='block';
+    }).catch(function(){});
+  }
+  window.fuSend=function(k,btn){
+    btn.textContent='发送中…';btn.disabled=true;
+    fetch('/api/followup/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k})})
+      .then(function(r){return r.json()}).then(function(d){
+        btn.textContent=d.ok?'✓ 已发':'失败';
+        btn.style.background=d.ok?'#22c55e':'#ef4444';
+        if(d.ok)setTimeout(function(){dismissed[k]=1;ck()},1500);
+      });
+  };
+  window.fuPrev=function(k){
+    fetch('/api/followup/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,preview:true})})
+      .then(function(r){return r.json()}).then(function(d){
+        if(d.ok)alert('Subject: '+d.subject+'\n\n'+d.body);
+      });
+  };
+  window.fuDism=function(k){
+    fetch('/api/followup/dismiss',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,days:3})})
+      .then(function(r){return r.json()}).then(function(d){if(d.ok){dismissed[k]=1;ck()}});
+  };
+  document.getElementById('fu-close').addEventListener('click',function(){
+    document.getElementById('fu-toast').style.display='none';
+  });
+  setTimeout(ck,3000);
+  setInterval(ck,5*60*1000);
+})();
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
